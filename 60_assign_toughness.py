@@ -101,7 +101,6 @@ df = replace_value(df=df, colname="評価会社", li=li, repword="三菱UFJリ�
 li=[
  '三菱 UFJ リサーチ&コンサルティング株式会社, PB ジャパン株式会社',
  '三菱UFJリサーチ&コンサルティング株式会社, PB ジャパン株式会社',
- '三菱UFJリサーチ&コンサルティング株式会社',
 ]
 df = replace_value(df=df, colname="評価会社", li=li, repword="三菱UFJリサーチ&コンサルティング株式会社, PBジャパン株式会社")
 
@@ -252,7 +251,7 @@ def calculate_group_mean_excluding_self(row, df, group_col, value_col):
     # Handle the case where the group only has one member (the current row)
     return None
 
-df['avg_outcome_evalator'] = df.apply(
+df['evaluator_avg_other_pjt'] = df.apply(
     lambda row: calculate_group_mean_excluding_self(row, df, '評価会社', 'total_eval'),
     axis=1
 )
@@ -263,7 +262,7 @@ df
 # %%
 
 # 検算
-col=['評価会社','案件名','total_eval', 'avg_outcome_evalator']
+col=['評価会社','案件名','total_eval', 'evaluator_avg_other_pjt']
 df[df['評価会社']=='ガボン事務所'][col]
 
 # %%

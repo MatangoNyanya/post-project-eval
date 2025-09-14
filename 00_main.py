@@ -14,8 +14,6 @@ from nbclient import NotebookClient
 # 05_get_data_from.ipynbは長時間稼働のため、個別実行を推奨
 RUN_LIST = [
     "05_get_data_from.ipynb",
-    "10_col_rename.ipynb",
-    "15_drop_duplicate.ipynb",
     "17_check_digit.ipynb",
     "20_calc_cost_duration.ipynb",
     "25_assign_region.ipynb",
