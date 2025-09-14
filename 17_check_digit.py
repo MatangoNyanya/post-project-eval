@@ -7,7 +7,7 @@ import pandas as pd
 
 # %%
 
-df = pd.read_csv("df_check_3.csv",index_col=0)
+df = pd.read_csv("df_check_pro.csv",index_col=0)
 df
 
 # %%

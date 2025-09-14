@@ -318,4 +318,3 @@ df_agg_filtered=df_agg_filtered[select_col]
 # %%
 
 df_agg_filtered.to_csv('df_check_4.csv', index=False)
-あああ
