@@ -8,6 +8,9 @@ df_ori = pd.read_csv('df_check_pro.csv')
 
 count = len(df_ori)
 print(f"レコード数: {count}")
+# %%
+
+df_ori['left_4'] = df_ori['案件名'].astype(str).str[:4]
 
 # %%
 
@@ -28,14 +31,15 @@ def add_sequential_number_groupby(df, key_column, new_column_name='sequential_id
 
 # keyが同じものを重複プロジェクトとして削除する
 # webサイトのつくり上、フェーズ１と２が分かれて掲載されているが、どちらも同じPDFファイルの場合重複を削除する
-key = ['国名','プロジェクト期','プロジェクトコスト_計画時_int', 'プロジェクトコスト_実績_int','プロジェクト期間開始_計画時','プロジェクト期間終了_計画時', 'file']
+key = ['国名','file', '評価年度','評価会社', 'left_4']
 df = df_ori.sort_values(key)
 
 key.remove('file')
 df = add_sequential_number_groupby(df, key, new_column_name='連番')
-df = df[df['連番']==1]
 count = len(df)
+count_file = len(df['file'].unique())
 print(f"レコード数: {count}")
+print(f"ファイル数: {count_file}")
 
 # %%
 
