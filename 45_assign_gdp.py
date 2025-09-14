@@ -1,0 +1,121 @@
+# -*- coding: utf-8 -*-
+# Auto-generated from 45_assign_gdp.ipynb
+# Cells are delimited with '# %%' markers.
+
+# %% [markdown]
+## 期間中のGDP成長率を付与する
+
+# %%
+import pandas as pd
+df = pd.read_csv("df_check_8.csv", index_col=0)
+df
+
+# %%
+df_data = pd.read_csv("input/input_gdp.csv")
+df_data = df_data.rename(columns={'Unnamed: 0': 'country_name_en'})
+df_data = df_data.rename(columns={'counjp': 'country'})
+
+df_data
+
+# %%
+# 既存の df_data をそのまま使うと仮定
+df_long = df_data.melt(
+    id_vars=['Country Name', 'Country Code', 'Indicator Name', 'Indicator Code'],
+    var_name='Year',
+    value_name='Value'
+)
+
+# Year を数値に変換したい場合
+df_long['Year'] = df_long['Year'].astype(int)
+
+df_long = df_long.rename(columns={'Value': 'gdp_growth'})
+df_long = df_long[['Country Code','Year', 'gdp_growth']]
+
+# 結果確認
+df_long['join_flg'] = True
+df_long = df_long.rename(columns={'Country Code': 'alpha3'})
+
+df_long
+
+# %%
+
+df['join_flg'] = (
+    (
+        (df['project_start_year']!=0) & (df['project_end_year']!=0)
+    )
+    &(
+        (df['project_start_year'].notna()) & (df['project_end_year'].notna())
+    )
+)
+
+# %%
+# dfと結合
+df = df.merge(df_long, on=['alpha3','join_flg'], how='left')
+df
+
+# %%
+# 開始・終了期間のみのレコードを残して平均をとる
+# それ以外のレコードを除外する。条件は 1 or 2 or 3
+# 1.開始終了がとれなかったもの(join_flg false)
+# 2.複数地域のため、開始終了は取れたが、複数地域のため、値が一意にならなかったもの（地域詳細がNULL）
+# 3.開始・終了年以内のレコード
+cond = (
+    (~df['join_flg']) |
+    (df['地域詳細'].isna()) |
+    (
+        (df['project_start_year'] <= df['Year'])&
+        (df['Year'] <= df['project_end_year'])
+    )
+)
+df = df[cond]
+df
+
+# %%
+group_keys = ['file']
+
+# 平均を取りたいカラムをリストで定義
+mean_cols = [
+    'gdp_growth',
+]
+
+# agg_dict を動的に生成
+agg_dict = {
+    col: ('mean' if col in mean_cols else 'first')
+    for col in df.columns
+    if col not in group_keys
+}
+
+# groupby + agg
+df_grouped = (
+    df
+    .groupby(group_keys, as_index=False)
+    .agg(agg_dict)
+)
+
+# （任意）列順を調整
+cols_order = group_keys + [c for c in df_grouped.columns if c not in group_keys]
+df_grouped = df_grouped[cols_order]
+
+df_grouped
+
+# %%
+df_grouped = df_grouped.drop(columns="Year")
+df_grouped.to_csv('df_check_9.csv')
+
+# %%
+
+# %%
+# 検算
+cols = ['alpha3','プロジェクト期間開始_実績','プロジェクト期間終了_実績','gdp_growth']
+df_grouped[df_grouped['file']=='https://www2.jica.go.jp/ja/evaluation/pdf/2015_0602104_4_f.pdf'][cols]
+
+# %%
+df_long = df_long[((2007 <= df_long['Year']) & (df_long['Year'] <= 2013) & (df_long['alpha3'] == 'CHN'))]
+df_long
+
+# %%
+df_long = df_long.groupby('alpha3').agg('mean')
+df_long
+
+# %%
+

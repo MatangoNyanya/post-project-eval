@@ -1,0 +1,415 @@
+# -*- coding: utf-8 -*-
+# Auto-generated from 05_get_data_from_api.ipynb
+# Cells are delimited with '# %%' markers.
+
+# %% [markdown]
+## setup
+
+# %%
+# %pip install --upgrade --user --quiet google-cloud-aiplatform
+
+# %%
+# !pip install -q -U google-generativeai
+# !pip install google-colab
+
+# %%
+# !pip install google-genai
+
+# %%
+# APIキーを設定
+api_key = "xxxxxx"
+
+# %%
+from vertexai.generative_models import (
+    Part,
+)
+
+# %%
+# Use the environment variable if the user doesn't provide Project ID.
+import os
+
+import vertexai
+
+PROJECT_ID = "xxxxxxxxx"
+if not PROJECT_ID or PROJECT_ID == "[your-project-id]":
+    PROJECT_ID = str(os.environ.get("GOOGLE_CLOUD_PROJECT"))
+
+LOCATION = os.environ.get("GOOGLE_CLOUD_REGION", "asia-northeast1")
+
+vertexai.init(project=PROJECT_ID, location=LOCATION)
+
+# %%
+# Choose a model
+
+#MODEL_ID = 'gemini-2.0-flash'
+#MODEL_ID = 'gemini-2.5-pro-exp-03-25'
+#MODEL_ID = 'gemini-2.5-flash-preview-05-20'
+MODEL_ID = 'gemini-2.5-pro'
+
+# %%
+def get_prompt():
+    prompt = """
+    ## 依頼
+
+    以下のカラムに対応する情報を正確に読み取り、JSON形式で出力してください。
+
+    # 作成対象カラム
+    "プロジェクト期", "国名", "評価年度", "評価会社","評価者",
+    "プロジェクトコスト_計画時", "プロジェクトコスト_実績", "プロジェクトコスト_被援助国負担額", "プロジェクトコスト_計画時_int", "プロジェクトコスト_実績_int","プロジェクトコスト_被援助国負担額_int",
+    "プロジェクト期間開始_計画時", "プロジェクト期間終了_計画時", "プロジェクト期間開始_実績", "プロジェクト期間終了_実績",
+    "事前評価時_プロジェクト期間（月）", "実績_プロジェクト期間（月）", "妥当性評価", "整合性評価", "有効性評価",
+    "インパクト評価", "効率性評価","効率性_コスト","効率性_期間", "持続性評価", "適応・貢献評価", "付加価値・創造価値評価", "総合評価", "備考"
+
+    # 出力形式
+    読み取った内容をそのままJSON形式で出力してください。
+    情報はテキスト抽出や計算によって得られる範囲で構いません。
+    出力は必ずJSON形式を守り、改行コードやエスケープされた文字列表示は不要です。
+
+    ## 注意事項
+      • ハルシネーションは絶対に起こさないでください。
+      • 全体を一通り確認した上で、正確な回答を記入してください。
+      • フェーズ1とフェーズ2や、1期・2期、または複数のプロジェクトが記載されている場合は、複数行で分けて出力してください。例えば、フェーズ１とフェーズ２がある場合は、それぞれ別行として「プロジェクトコスト_計画時」「プロジェクトコスト_実績」「プロジェクト期間開始_計画時」「プロジェクト期間終了_計画時」「プロジェクト期間開始_実績」「プロジェクト期間終了_実績」を記載し、出力全体は2行となるようにしてください。その際、「プロジェクト期」には1, 2...と連番を付与してください。
+      • "プロジェクトコスト_計画時_int" と "プロジェクトコスト_実績_int"、"プロジェクトコスト_被援助国負担額_int" には、金額を円換算した数値を入力してください。もし金額がドル表記の場合は、1ドル＝150円として計算してください。
+      • 記載のないカラムは "N/A" と記入してください。
+      • 評価はAや3などの記号で示される場合もありますが、必ず本文内に評価の定義が記載されています。その定義に基づいて評価値を記述してください。外部評価の場合は、「レーティング」として記載されています。
+         例: 妥当性評価がAと記され、Aが「非常に高い」と定義されている場合、妥当性評価の出力例は "妥当性評価": ["非常に高い"] となります。
+      • 総合評価は「非常に高い」「高い」「一部課題がある」「低い」の4段階から、本文に記載されている評価を選択してください。なお、総合評価を行わないと記載されている場合は"N/A"としてください。
+      • プロジェクトコスト_計画時は、「交換公文限度額」「限度額」「円借款貸与額」として記載される場合があります。外部事後評価報告書の場合、表形式で記入されています。
+      • プロジェクトコスト_実績は、「供与額」「協力金額」「円借款実行額」として記載される場合があります。外部事後評価報告書の場合、表形式で記入されています。
+      • プロジェクト期間開始_計画時は、「交換公文締結日」として記載される場合があります。
+      • 「贈与契約締結日」と「貸付完了」の日付は使わないでください。
+      • プロジェクト期間終了_計画時が記載されておらず、延長期間が記載されている場合、延長期間が始まる1ヶ月前をプロジェクト期間終了_計画時としてください。（例：2013年1月～2017年2月（延長期間2017年1月～2017年2月）であれば、プロジェクト期間終了_計画時は2016年12月とする）
+      • プロジェクト期間終了_実績とプロジェクト期間開始_実績は、外部事後評価報告書の場合、「効率性」の「事業期間」の項目を読んで記載してください。
+      • プロジェクト期間終了_実績は、「事業完了日」として記載される場合があります。
+      • プロジェクト期間終了_実績が延長期間として記載される場合は、その延長期間の最終日を「プロジェクト期間終了_実績」としてください。
+      • 計画時の記載は「事前評価時」として扱われることがあります。
+      • プロジェクト期間開始_実績、プロジェクト期間終了_実績は「協力期間」として記載されている場合があります。効率性_期間が100％の場合は、プロジェクト期間開始_計画とプロジェクト期間開始_終了に、プロジェクト期間開始_実績、プロジェクト期間終了_実績と同じ値を入れてください。
+      • 効率性_コストと効率性_期間は、効率性評価に書いてある計画比（％）を記入してください。％の記載がない場合は"N/A"と書いてください。その際、記載されている順序に注意してください。
+      （例：事業期間は計画どおりであったが、事業費は計画を若干上回った（計画比：100％、104％）とある場合、期間のあとに事業費が書いてあるため、効率性_期間は100％、効率性_コストは104％になります）
+      • もし、プロジェクトコスト_計画時が記載されておらず、効率性_コストが100%である場合、"プロジェクトコスト_計画時"には "プロジェクトコスト_実績"の値を入れてください。
+      • プロジェクトが未完成で終わっている場合は、備考に未完と書いてください。
+      • 評価会社には評価した会社名や所属組織や大学名を書いてください。「事務所」や「支所」といったJICA事務所が評価している場合は、「タンザニア事務所」のように事務所名を書いてください。
+      • 評価者には評価書を作成した人名を書いてください。苗字と名前の間のスペースは不要です。伊藤 雄一ではなく、伊藤雄一としてください。「事務所」や「支所」といったJICA事務所が評価している場合は、"N/A"と書いてください。
+      • プロジェクトが未完成で終わっている場合は、備考に未完と書いてください。
+      • 被援助国の金銭的負担額が記載されている場合は、プロジェクトコスト_被援助国負担額に記載してください。プロジェクトコスト_計画時とプロジェクトコスト_実績には日本と被援助国トータルのコストを記載してください。被援助国の負担の記載がない場合は"N/A"と書いてください。
+
+    ## 出力例
+    [
+      {
+          "プロジェクト期": "1",
+          "国名": "インド",
+          "評価年度": "2023",
+          "評価会社": "OPMAC 株式会社",
+          "評価者": "伊藤雄一",
+          "プロジェクトコスト_計画時": "320百万円",
+          "プロジェクトコスト_実績": "270百万円",
+          "プロジェクトコスト_被援助国負担額": "10百万円",
+          "プロジェクトコスト_計画時_int": "320,000,000",
+          "プロジェクトコスト_実績_int": "270,000,000",
+          "プロジェクトコスト_被援助国負担額_int": "10,000,000",
+          "プロジェクト期間開始_計画時": "2010年5月",
+          "プロジェクト期間終了_計画時": "2014年2月",
+          "プロジェクト期間開始_実績": "2013年5月",
+          "プロジェクト期間終了_実績": "2014年2月",
+          "事前評価時_プロジェクト期間（月）": "46",
+          "実績_プロジェクト期間（月）": "10",
+          "妥当性評価": "高い",
+          "整合性評価": "N/A",
+          "有効性評価": "高い",
+          "インパクト評価": "高い",
+          "効率性評価": "高い",
+          "効率性_期間": "104%",
+          "効率性_コスト" "100%",
+          "持続性評価": "やや低い",
+          "適応・貢献評価": "N/A",
+          "付加価値・創造価値評価": "N/A",
+          "総合評価": "非常に高い",
+          "備考": ""
+      }
+    ]
+    """
+    return prompt
+
+# %% [markdown]
+## 取得対象の設定
+
+# %%
+# %pip install bs4
+# %pip install beautifulsoup4
+
+# %%
+file_list = []
+import re
+import pandas as pd
+
+from bs4 import BeautifulSoup
+
+df_html = pd.DataFrame()
+
+# ページは最後のページ+1まで
+numbers = list(range(1, 126))
+for n in numbers:
+  # URL
+  # 2010-25年までにの事後評価に１ページずつアクセス
+  url = f"https://www2.jica.go.jp/ja/evaluation/index.php?anken=&area1=&country1=&area2=&country2=&area3=&country3=&field1=&field2=&field3=&tech_ga%5B0%5D=%E4%BA%8B%E5%BE%8C%E8%A9%95%E4%BE%A1&oda_loan%5B0%5D=%E4%BA%8B%E5%BE%8C%E8%A9%95%E4%BE%A1&grant_aid%5B0%5D=%E4%BA%8B%E5%BE%8C%E8%A9%95%E4%BE%A1&start_from=&start_to=&fiscal_from=2010&fiscal_to=2025&search=%E6%A4%9C%E7%B4%A2&p={n}"
+  # URLにアクセス
+  html = urllib.request.urlopen(url)
+  # HTMLをBeautifulSoupで扱う
+  soup = BeautifulSoup(html, "html.parser")
+  # 'link-text' または 'c-link-file' クラスを持つ要素を抽出
+  elements = soup.find_all(class_=['link-text', 'c-link-file'], href=True)
+
+  # 抽出された要素を出力
+  for element in elements:
+      file_list.append(re.search(r'href="(.*?)"', str(element)).group(1))
+
+  # 各行から「事業形態」「分野」「案件名」を抽出（それぞれ1列目, 6列目, 7列目）
+  table = soup.find("table", class_="p-search-result-table")
+  tbody = table.find("tbody")
+  rows = tbody.find_all("tr")
+  for row in rows:
+      cols = row.find_all("td")
+      business = cols[0].get_text(strip=True)
+      field = cols[5].get_text(strip=True)
+      project = cols[6].get_text(strip=True)
+
+      if (cols[7].find('a') is None) &(cols[8].find('a') is None):
+        url = None
+      elif (cols[7].find('a') is not None) &(cols[8].find('a') is None):
+        a_tag = cols[7].find('a')
+        url = a_tag.get('href')
+      elif (cols[7].find('a') is None) &(cols[8].find('a') is not None):
+        a_tag = cols[8].find('a')
+        url = a_tag.get('href')
+
+      eval_year = cols[3].get_text(strip=True)
+      country = cols[4].get_text(strip=True)
+
+      df = pd.DataFrame([{"事業形態": business, "分野": field, "案件名": project, "URL": url, "評価年度":eval_year, "国名": country}])
+      df_html=pd.concat([df_html, df])
+
+# %%
+# 総数確認
+len(df_html)
+
+# %% [markdown]
+## API呼び出し
+
+# %%
+
+def jsonize(jsonlikewords):
+    import re
+    import json
+
+    # JSON文字列に変換
+    json_text = jsonlikewords.replace("json", "")
+    json_text = json_text.replace("\n", "")
+    json_text = json_text.replace("```", "")
+    json_text = json_text.replace("    ", "")
+
+    # JSONとして読み込み
+    json_data = json.loads(json_text)
+
+    return json_data
+
+# %%
+import time
+from google.api_core import retry
+from google.api_core import exceptions as api_core_exceptions
+import google.generativeai as genai
+import google.genai.errors as genai_errors # ★ genai のエラーをインポート
+import httpx
+import logging
+
+# ロギングの設定
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
+# リトライすべき google.api_core または google.genai のサーバーエラー/リソース枯渇エラーか判定する関数
+def is_retryable_genai_server_error(exc):
+    """google.api_core または google.genai のリトライすべき例外か判定"""
+    # google.api_core の例外をチェック (500, 503, 504, 429)
+    if isinstance(exc, (api_core_exceptions.InternalServerError,
+                       api_core_exceptions.ServiceUnavailable,
+                       api_core_exceptions.DeadlineExceeded,
+                       api_core_exceptions.ResourceExhausted)):
+        logging.warning(f"Detected google.api_core retryable error ({type(exc).__name__}). Retrying...")
+        return True
+
+    # ★ google.genai.errors の例外をチェック
+    # ServerError (500, 503 など) をリトライ対象に含める
+    if isinstance(exc, genai_errors.ServerError):
+        # ServerError は 5xx 系エラーを示すため、基本的にリトライ対象とする
+        logging.warning(f"Detected google.genai.errors.ServerError. Retrying...")
+        return True
+    # ResourceExhaustedError (429) もリトライ対象に含める
+    if isinstance(exc, genai_errors.ResourceExhaustedError):
+         logging.warning(f"Detected google.genai.errors.ResourceExhaustedError (Quota Exceeded?). Retrying...")
+         return True
+    # 他にもリトライしたい genai のエラーがあればここに追加
+    # 例: if isinstance(exc, genai_errors.DeadlineExceededError): return True
+
+    return False
+
+# リトライすべき httpx のエラーか判定する関数
+def is_retryable_http_error(exc):
+    """httpx の 5xx系 または 429 HTTPエラーかどうかを判定"""
+    if isinstance(exc, httpx.HTTPStatusError):
+        status_code = exc.response.status_code
+        is_5xx_error = status_code >= 500 and status_code < 600
+        is_429_error = status_code == 429 # Too Many Requests
+        if is_5xx_error or is_429_error:
+             logging.warning(f"Detected HTTP Error (Status: {status_code}). Retrying...")
+             return True
+    return False
+
+# 総合的なリトライ判定関数
+def should_retry(exc):
+    """リトライすべき例外かどうかを総合的に判断"""
+    # is_retryable_genai_server_error で True ならリトライ
+    if is_retryable_genai_server_error(exc):
+        return True
+    # is_retryable_http_error で True ならリトライ
+    if is_retryable_http_error(exc):
+        return True
+    # google.api_core の RetryError (内部リトライからのエラー)
+    if isinstance(exc, api_core_exceptions.RetryError):
+         logging.warning(f"Google API Core RetryError detected. Retrying...")
+         return True
+
+    # 上記以外はリトライしない
+    # Non-retryable のログレベルを WARNING に変更（エラーではないため）
+    logging.warning(f"Non-retryable error occurred: {type(exc).__name__} - {exc}")
+    return False
+
+# %%
+@retry.Retry(
+    predicate=should_retry,      # リトライ条件を指定する関数
+    initial=1.0,               # 最初のリトライまでの遅延時間（秒）(google.api_core の推奨は initial)
+    maximum=60.0,              # 最大遅延時間（秒）(google.api_core の推奨は maximum)
+    multiplier=2.0,            # 遅延時間の倍率 (google.api_core の推奨は multiplier)
+    deadline=300.0,            # 全体の試行の最大時間（秒） (google.api_core の推奨は deadline)
+    # on_error コールバックでリトライ時に追加処理も可能
+    # on_error=lambda exc: logging.warning(f"Retrying due to {exc}")
+)
+def generate_content_with_retry(url: str, model_id: str):
+    """
+    PDFデータとプロンプトを使用してGemini APIを呼び出し、コンテンツを生成する（リトライ付き）。
+
+    Returns:
+        Gemini APIからのレスポンスオブジェクト。
+
+    Raises:
+        google.api_core.exceptions.RetryError: 指定されたリトライ回数を超えても成功しなかった場合。
+        Exception: その他の予期しないエラー。
+    """
+    try:
+        logging.info(f"Attempting to generate content with model: {model_id}")
+
+        doc_data = httpx.get(url).content
+        pdf_file = Part.from_uri(pdf_file_uri, mime_type="application/pdf")
+        contents=[
+          types.Part.from_bytes(
+            data=doc_data,
+            mime_type='application/pdf',
+          ), prompt
+        ]
+
+        response = client.models.generate_content(
+            model=model_id,
+            contents=contents,
+        )
+
+        logging.info("Successfully generated content.")
+        return response
+
+    except (api_core_exceptions.GoogleAPIError, httpx.HTTPStatusError) as e:
+        # should_retry で判定されるので、ここではログ出力のみ行い再raiseする
+        # (should_retryでFalseが返れば、このraiseが最終的なエラー送出となる)
+        logging.error(f"Error during API call or data processing: {e}")
+        raise e
+    except Exception as e:
+        # 予期しないその他のエラー
+        logging.exception(f"An unexpected error occurred in generate_content_with_retry: {e}")
+        # 予期しないエラーはリトライさせずに上位に投げる
+        raise
+
+# %%
+import pandas as pd
+import grpc
+from google.api_core.exceptions import InvalidArgument
+
+prompt = get_prompt()
+error=[]
+path = "df_check_pro"
+df_out = pd.DataFrame()
+j = 0
+
+# 1件ずつAPIでJSON取得
+for i,row in df_html.iterrows():
+    j += 1
+    # httpの場合ダウンロードできないためhttpsに置換
+    f = row["URL"]
+    f = f.replace("http:", "https:")
+
+    retry_flg = len(df_out) > 0
+    skip_flg = False
+
+    # 再実行用に、すでに対象が存在する場合はスキップ
+    if retry_flg:
+      skip_flg = f in df_out["file"].values
+
+    if skip_flg:
+        print(f"already processed {f}")
+    else:
+        try:
+          pdf_file_name = f.split('/')[-1]
+          print(f"processing {f}, {j} out of {len(df_html)}")
+
+          response = generate_content_with_retry(url=f,model_id=MODEL_ID)
+
+          json_out = jsonize(response.text)
+
+          df_data = pd.DataFrame(json_out)
+            
+          df_data["file"] = f
+          df_data["事業形態"] = row["事業形態"]
+          df_data["分野"] = row["分野"]
+          df_data["案件名"] = row["案件名"]
+          df_data["評価年度"] = row["評価年度"]
+          df_data["国名"] = row["国名"]            
+
+          df_out=pd.concat([df_out, df_data])
+
+          # 毎回保存すると重いので50回に一回保存
+          mod = 50
+          if j % mod == 0:
+              df_out.to_csv(f"{path}.csv")
+              print(f"save df succeessed {pdf_file_name}")
+
+        except api_core_exceptions.RetryError as e:
+          logging.error(f"Failed to generate content after multiple retries: {e}")
+        except Exception as e:
+          logging.error(f"An error occurred during the process: {e}", exc_info=True) # トレースバックも出力
+
+        except grpc.RpcError as e:
+          error.append(f)
+          print(f"failed RpcError {f}")
+
+        except InvalidArgument:
+          print(f"too many token {f}")
+
+        except(ValueError):
+          error.append(f)
+          print(f"failed ValueError {f}")
+df_out.to_csv(f"{path}.csv")
+
+# %%
+df_out.to_csv(f"{path}.csv")
+
+# %%
+len(pd.read_csv("df_check_pro.csv"))
+
+# %%
+df = pd.read_csv("df_check_pro.csv")
+len(df['file'].unique())
+

@@ -1,0 +1,305 @@
+# -*- coding: utf-8 -*-
+# Auto-generated from 20_calc_cost_duration.ipynb
+# Cells are delimited with '# %%' markers.
+
+# %% [markdown]
+## 実績期間がない場合、効率性の割合から算出する
+
+# %%
+import pandas as pd
+
+# %%
+df = pd.read_csv("df_check_4.csv",index_col=0)
+
+# %%
+# 効率性_コストのカラムから「約」と「超」を削除する
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('約', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace(' ', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('　', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('以上', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('未満', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('超', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('以下', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('計画比', '', regex=False)
+
+# 確認
+df[df['file'] == 'https://www2.jica.go.jp/ja/evaluation/pdf/2018_1001020_4_f.pdf']['効率性_コスト']
+
+# %% [markdown]
+## 複数プロジェクトをgroupbyで合計するため、複数フェーズで同じ期間やコストが書かれている場合、片方を0に置き換える
+
+# %%
+import numpy as np
+
+li = ['プロジェクトコスト_計画時_int','プロジェクトコスト_実績_int','事前評価時_プロジェクト期間（月）',	'実績_プロジェクト期間（月）', 'プロジェクトコスト_被援助国負担額_int']
+df = df.sort_values(['file','プロジェクト期間開始_計画時'])
+
+for l in li:
+  col_name = f"lag_{l}"
+  df[col_name] = df.groupby('file')[l].shift(-1)
+  # lagした値と元の値が一緒であれば、元の値を0に置き換える
+  df[l] = df.apply(lambda row: "0" if row[col_name] == row[l] else row[l], axis=1)
+
+# %%
+# ２期合計の値が入っているため、片方を0に置換
+df[df['file'] == 'https://www2.jica.go.jp/ja/evaluation/pdf/2011_0407500_4_f.pdf']
+
+# %% [markdown]
+## 実績のコストと効率性の割合から、計画時のコストを割り出す
+
+# %%
+null_percentage = df['プロジェクトコスト_計画時_int'].isnull().sum() / len(df) * 100
+print(f"プロジェクトコスト_計画時_intがNULLの割合: {null_percentage:.2f}%")
+df_null = df[df['プロジェクトコスト_計画時_int'].isnull()]['file']
+
+# %%
+# 文字列入力されているものを数値に置換
+df["プロジェクトコスト_計画時_int"] = pd.to_numeric(df["プロジェクトコスト_計画時_int"].str.replace(',', ''), errors='coerce')
+df["プロジェクトコスト_実績_int"] = pd.to_numeric(df["プロジェクトコスト_実績_int"].str.replace(',', ''), errors='coerce')
+df["効率性_期間"] = pd.to_numeric(df["効率性_期間"].str.replace('%', ''), errors='coerce')
+df["効率性_コスト"] = pd.to_numeric(df["効率性_コスト"].str.replace('%', ''), errors='coerce')
+
+df["プロジェクトコスト_計画時_int"] = df["プロジェクトコスト_計画時_int"].astype("double")
+df["プロジェクトコスト_実績_int"] = df["プロジェクトコスト_実績_int"].astype("double")
+df["効率性_期間"] = df["効率性_期間"].astype("double")
+df["効率性_コスト"] = df["効率性_コスト"].astype("double")
+
+# %%
+# プロジェクトコスト_計画時_intがNULLであるとき、評価書記載の効率性をもとに実績コストから割り出す
+df['プロジェクトコスト_計画時_int'] = df.apply(
+    lambda row: row['プロジェクトコスト_実績_int'] / row['効率性_コスト'] *100 
+    if ((not pd.isna(row['効率性_コスト']))&(pd.isna(row['プロジェクトコスト_計画時_int']))) 
+    else row['プロジェクトコスト_計画時_int'], axis=1
+)
+
+# %%
+null_percentage = df['プロジェクトコスト_計画時_int'].isnull().sum() / len(df) * 100
+print(f"プロジェクトコスト_計画時_intがNULLの割合: {null_percentage:.2f}%")
+
+# %%
+import pandas as pd
+
+pd.set_option('display.max_rows', 900)
+
+# %%
+df_show = df.merge(df_null, on=['file'], how='inner')
+col = ['file', 'プロジェクトコスト_計画時_int', 'プロジェクトコスト_実績_int','効率性_コスト']
+df_show[col]
+
+# %% [markdown]
+## 期間の確認
+
+# %%
+# フェーズに依存しない項目について、ファイル単位でフィルする
+eval_cols = ['効率性_期間', '効率性_コスト','妥当性評価','整合性評価','有効性評価','インパクト評価','効率性評価'	,'持続性評価','総合評価']
+key = ['file']
+for col in eval_cols:
+    df[col] = df.groupby(key)[col].transform(lambda x: x.ffill().bfill())
+
+# %%
+def convert_date(date_str):
+    try:
+        # 日まで含まれる形式で変換を試みる
+        return pd.to_datetime(date_str, format='%Y年%m月%d日')
+    except ValueError:
+        try:
+          # 日まで含まれていない形式で変換する
+          return pd.to_datetime(date_str, format='%Y年%m月')
+        except:
+          return pd.NaT
+
+# %%
+date_cols = [
+    'プロジェクト期間終了_計画時',
+    'プロジェクト期間終了_実績',
+    'プロジェクト期間開始_計画時',
+    'プロジェクト期間開始_実績',
+]
+
+for d in date_cols:
+    df[d] = df[d].apply(convert_date)
+
+# %%
+df[df['file'] == 'https://www2.jica.go.jp/ja/evaluation/pdf/2016_0803600_4_f.pdf'][date_cols]
+
+# %%
+# 期間が100だが、プロジェクト期間終了_計画時_実績-プロジェクト期間開始_計画時とプロジェクト期間終了_実績-プロジェクト期間開始_実績が一致しないものを確認
+
+# プロジェクト期間の差分を計算
+df['期間差_計画'] = (
+    (df['プロジェクト期間終了_計画時'] - df['プロジェクト期間開始_計画時']).dt.days / 30
+)
+df['期間差_計画'] = df['期間差_計画'][df['期間差_計画'].notna()]
+df['期間差_実績'] = (
+    (df['プロジェクト期間終了_実績'] - df['プロジェクト期間開始_実績']).dt.days / 30
+)
+df['期間差_実績'] = df['期間差_実績'][df['期間差_実績'].notna()]
+
+# %%
+df['プロジェクト期間終了_計画時'] = df.apply(
+    lambda row: row['プロジェクト期間開始_計画時'] + pd.Timedelta(days=int(row['期間差_実績'] / row['効率性_期間'] * 100 * 30))
+    if not pd.isna(row['期間差_実績']) and not pd.isna(row['効率性_期間']) and row['効率性_期間'] != 0
+    else row['プロジェクト期間終了_計画時'],
+    axis=1
+)
+df[['国名', 'プロジェクト期間終了_計画時', 'プロジェクト期間終了_実績', 'プロジェクト期間開始_計画時', 'プロジェクト期間開始_実績', '期間差_計画', '期間差_実績', '効率性_期間','file']]
+
+# %%
+import numpy as np
+
+def convert_days(days_str):
+    try:
+        return int(days_str)
+    except ValueError:
+        return np.nan
+
+# %%
+date_cols = [
+    '事前評価時_プロジェクト期間（月）',
+    '実績_プロジェクト期間（月）',
+]
+
+for d in date_cols:
+  df[d] = df[d].str.replace('ヶ月', '').replace('か月', '').replace('カ月', '').replace('ヵ月', '')
+  df[d] = df[d].apply(convert_days)
+
+# %%
+def floor_series_with_na_math(series):
+  """
+  NaNを含むdouble型のSeriesをmath.floorで小数点切り捨てする
+
+  Args:
+    series (pd.Series): 対象のSeries
+
+  Returns:
+    pd.Series: 小数点切り捨て後のSeries
+  """
+  return series.apply(lambda x: math.floor(x) if pd.notna(x) else x)
+
+# %%
+df['実績_プロジェクト期間（月）'] = df.apply(
+    lambda row: (row['プロジェクト期間終了_実績'] - row['プロジェクト期間開始_実績']).days / 30
+    if pd.isna(row['実績_プロジェクト期間（月）'])
+    else row['実績_プロジェクト期間（月）'],
+    axis=1
+)
+df['実績_プロジェクト期間（月）'] = floor_series_with_na_math(df['実績_プロジェクト期間（月）'])
+
+df['事前評価時_プロジェクト期間（月）'] = df.apply(
+    lambda row: (row['プロジェクト期間終了_計画時'] - row['プロジェクト期間開始_計画時']).days / 30
+    if pd.isna(row['事前評価時_プロジェクト期間（月）'])
+    else row['事前評価時_プロジェクト期間（月）'],
+    axis=1
+)
+df['事前評価時_プロジェクト期間（月）'] = floor_series_with_na_math(df['事前評価時_プロジェクト期間（月）'])
+
+
+df[['国名', '評価者', 'プロジェクト期間終了_計画時', 'プロジェクト期間終了_実績', 'プロジェクト期間開始_計画時', 'プロジェクト期間開始_実績', '実績_プロジェクト期間（月）', '事前評価時_プロジェクト期間（月）','file']]
+
+# %% [markdown]
+## 複数フェーズあるプロジェクトを事業評価書単位にサマる
+
+# %%
+df_agg = df.groupby('file').agg({
+  '国名': "first",
+  '評価年度': "first",
+  '評価会社': "first",
+  '評価者': "first",
+  'プロジェクトコスト_計画時_int': "sum",
+  'プロジェクトコスト_実績_int': "sum",
+  'プロジェクト期間開始_計画時': "min",
+  'プロジェクト期間終了_計画時': "min",
+  'プロジェクト期間開始_実績': "max",
+  'プロジェクト期間終了_実績': "max",
+  '事前評価時_プロジェクト期間（月）': "sum",
+  '実績_プロジェクト期間（月）': "sum",
+  '妥当性評価': "first",
+  '整合性評価': "first",
+  '有効性評価': "first",
+  'インパクト評価': "first",
+  '効率性評価': "first",
+  '効率性_コスト': "first",
+  '効率性_期間': "first",
+  '持続性評価': "first",
+  '適応・貢献評価': "first",
+  '付加価値・創造価値評価': "first",
+  '総合評価': "first",
+  '備考': "first",
+  '事業形態': "first",
+  '分野': "first",
+  '案件名': "first",
+}).reset_index()
+
+# %%
+cols = ['プロジェクトコスト_計画時_int', 'プロジェクトコスト_実績_int', '事前評価時_プロジェクト期間（月）', '実績_プロジェクト期間（月）']
+# 0を np.nan に置換
+df_agg[cols] = df_agg[cols].replace(0, np.nan)
+
+# %%
+df_agg[df_agg['案件名'].str.contains('スラバヤ空港建設事業', na=False)]
+
+# %%
+# それでも重複した場合に備えてキー単位で連番を振って削除
+
+def add_sequential_number_groupby(df, key_column, new_column_name='sequential_id'):
+  """
+  特定のカラムをキーに連番を付与する
+
+  Args:
+    df (pd.DataFrame): 対象のDataFrame
+    key_column (str): キーとなるカラム名
+    new_column_name (str): 新しい連番カラム名
+
+  Returns:
+    pd.DataFrame: 連番カラムが追加されたDataFrame
+  """
+  df[new_column_name] = df.groupby(key_column, dropna=False).cumcount(ascending=False) + 1
+  return df
+
+# keyが同じものを重複プロジェクトとして削除する
+# webサイトのつくり上、フェーズ１と２が分かれて掲載されているが、どちらも同じPDFファイルの場合重複を削除する
+key = ['国名','プロジェクト期間開始_計画時', 'プロジェクト期間終了_実績','事業形態','評価年度','総合評価']
+df_agg = df_agg.sort_values(key)
+df_agg = add_sequential_number_groupby(df_agg, key, new_column_name='連番')
+df_agg_filtered = df_agg[df_agg['連番']==1]
+
+# %%
+
+count = len(df_agg_filtered)
+print(f"レコード数: {count}")
+select_col = df_agg_filtered.columns
+df_agg_filtered.to_csv('df_check_4_ori.csv', index=False)
+
+# %%
+import numpy as np
+import pandas as pd
+
+group_keys = ['国名','プロジェクト期間開始_計画時', 'プロジェクト期間終了_実績','評価年度','総合評価']
+
+# 1) 同じキーで1行だけ残し、他は削除候補(True)
+df_agg_filtered['del_flg'] = df_agg_filtered.groupby(group_keys).cumcount() > 0
+
+# 2) 同じキー内で type の種類数（nunique）を各行に付与
+type_nuniq = df_agg_filtered.groupby(group_keys)['事業形態'].transform('nunique')
+
+# 3) new_type の決定
+#   - 同じキーで type が複数種類ある → 代表行(del_flg=False)は '複合'、それ以外は元のtype
+#   - 同じキーで type が1種類だけ → すべて元のtype
+df_agg_filtered['new_type'] = np.where(
+    type_nuniq > 1,
+    np.where(df_agg_filtered['del_flg'], df_agg_filtered['事業形態'], '複合'),
+    df_agg_filtered['事業形態']
+)
+
+
+count = len(df_agg_filtered)
+print(f"レコード数: {count}")
+
+# %%
+df_agg_filtered[~df_agg_filtered['del_flg']]
+df_agg_filtered['事業形態']=df_agg_filtered['new_type']
+df_agg_filtered=df_agg_filtered[select_col]
+
+# %%
+df_agg_filtered.to_csv('df_check_4.csv', index=False)
+

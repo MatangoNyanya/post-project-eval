@@ -1,0 +1,221 @@
+# -*- coding: utf-8 -*-
+# Auto-generated from 35_assign_wgi.ipynb
+# Cells are delimited with '# %%' markers.
+
+# %% [markdown]
+## WGI(世界ガバナンス指標)を付与する
+
+# %%
+import pandas as pd
+
+# %%
+df = pd.read_csv('df_check_6.csv')
+df
+
+# %%
+import pandas as pd
+
+data = {'country': ['ケニア', 'ベトナム', 'モンゴル', '中華人民共和国', 'ガーナ', 'ニカラグア', 'カンボジア', 'ネパール', 'タンザニア', 'マリ', 'インドネシア', 'エジプト',
+                    'ボスニア・ヘルツェゴビナ', 'インド', 'ザンビア', 'ナイジェリア', 'トンガ', 'パラオ', 'カメルーン', 'グアテマラ', 'サモア', 'モザンビーク',
+                    'ボリビア', 'バングラデシュ', 'セネガル', 'ブルキナファソ', 'ウガンダ', 'パラグアイ', 'ホンジュラス', 'パキスタン', 'マレーシア', 'ラオス',
+                    'モロッコ', 'アンゴラ', 'イラン', 'カザフスタン', 'モーリシャス', 'ペルー', 'フィリピン', 'スリランカ', 'チュニジア', 'ガボン',
+                    '東ティモール', 'ニジェール', 'ベナン', '南アフリカ共和国', 'エリトリア', 'ガンビア', 'キルギス', 'ブータン', 'アフガニスタン', 'ヨルダン',
+                    'エチオピア', 'キリバス', 'ツバル', 'マラウイ', 'ルワンダ', 'エルサルバドル', 'タイ', 'エクアドル', 'パプアニューギニア', 'コスタリカ',
+                    'アルゼンチン', 'ブラジル', 'チリ', 'パレスチナ', 'サウジアラビア', 'トルコ', 'アゼルバイジャン', 'シエラレオネ', 'ポーランド', 'ソロモン',
+                    'セルビア', 'ミクロネシア連邦', 'ウズベキスタン', 'モンテネグロ', 'バヌアツ', 'モルディブ', 'セントビンセント', 'モーリタニア', 'ウクライナ',
+                    'モルドバ', 'ジョージア', 'スロバキア', 'マダガスカル', '北マケドニア共和国', 'ギニア', 'セントクリストファー・ネービス', 'ミャンマー',
+                    'ドミニカ共和国', 'メキシコ', 'パナマ', 'アルジェリア', 'ブルガリア', 'スリナム', 'カーボベルデ', 'ジブチ', 'セーシェル',
+                    'セントルシア', 'タジキスタン', 'アルメニア', 'ルーマニア', 'ジャマイカ', 'ガイアナ', 'レソト', 'ブルンジ', 'マーシャル', 'ドミニカ',
+                    'アンティグア・バーブーダ', 'フィジー', 'アルバニア', 'グレナダ', 'レバノン', 'コンゴ民主共和国', 'エスワティニ', 'ナミビア',
+                    'バルバドス', 'コロンビア', 'キューバ', 'スーダン', 'ベリーズ', 'ギニアビサウ', 'ハイチ', 'コソボ', 'トーゴ', 'コモロ',
+                    'ジンバブエ', 'クロアチア', 'イラク', '南スーダン', 'コートジボワール', 'リベリア',  'ボツワナ'],
+        'alpha2': ['KE', 'VN', 'MN', 'CN', 'GH', 'NI', 'KH', 'NP', 'TZ', 'ML', 'ID', 'EG', 'BA', 'IN', 'ZM', 'NG', 'TO', 'PW', 'CM', 'GT',
+                   'WS', 'MZ', 'BO', 'BD', 'SN', 'BF', 'UG', 'PY', 'HN', 'PK', 'MY', 'LA', 'MA', 'AO', 'IR', 'KZ', 'MU', 'PE', 'PH',
+                   'LK', 'TN', 'GA', 'TL', 'NE', 'BJ', 'ZA', 'ER', 'GM', 'KG', 'BT', 'AF', 'JO', 'ET', 'KI', 'TV', 'MW', 'RW', 'SV',
+                   'TH', 'EC', 'PG', 'CR', 'AR', 'BR', 'CL', 'PS', 'SA', 'TR', 'AZ', 'SL', 'PL', 'SB', 'RS', 'FM', 'UZ', 'ME', 'VU',
+                   'MV', 'VC', 'MR', 'UA', 'MD', 'GE', 'SK', 'MG', 'MK', 'GN', 'KN', 'MM', 'DO', 'MX', 'PA', 'DZ', 'BG', 'SR', 'CV',
+                   'DJ', 'SC', 'LC', 'TJ', 'AM', 'RO', 'JM', 'GY', 'LS', 'BI', 'MH', 'DM', 'AG', 'FJ', 'AL', 'GD', 'LB', 'CD', 'SZ',
+                   'NA', 'BB', 'CO', 'CU', 'SD', 'BZ', 'GW', 'HT', 'XK', 'TG', 'KM', 'ZW', 'HR', 'IQ', 'SS', 'CI', 'LR', 'BW'],
+        'alpha3': ['KEN', 'VNM', 'MNG', 'CHN', 'GHA', 'NIC', 'KHM', 'NPL', 'TZA', 'MLI', 'IDN', 'EGY', 'BIH', 'IND', 'ZMB', 'NGA',
+                   'TON', 'PLW', 'CMR', 'GTM', 'WSM', 'MOZ', 'BOL', 'BGD', 'SEN', 'BFA', 'UGA', 'PRY', 'HND', 'PAK', 'MYS', 'LAO',
+                   'MAR', 'AGO', 'IRN', 'KAZ', 'MUS', 'PER', 'PHL', 'LKA', 'TUN', 'GAB', 'TLS', 'NER', 'BEN', 'ZAF', 'ERI', 'GMB',
+                   'KGZ', 'BTN', 'AFG', 'JOR', 'ETH', 'KIR', 'TUV', 'MWI', 'RWA', 'SLV', 'THA', 'ECU', 'PNG', 'CRI', 'ARG', 'BRA',
+                   'CHL', 'PSE', 'SAU', 'TUR', 'AZE', 'SLE', 'POL', 'SLB', 'SRB', 'FSM', 'UZB', 'MNE', 'VUT', 'MDV', 'VCT', 'MRT',
+                   'UKR', 'MDA', 'GEO', 'SVK', 'MDG', 'MKD', 'GIN', 'KNA', 'MMR', 'DOM', 'MEX', 'PAN', 'DZA', 'BGR', 'SUR', 'CPV',
+                   'DJI', 'SYC', 'LCA', 'TJK', 'ARM', 'ROU', 'JAM', 'GUY', 'LSO', 'BDI', 'MHL', 'DMA', 'ATG', 'FJI', 'ALB', 'GRD',
+                   'LBN', 'COD', 'SWZ', 'NAM', 'BRB', 'COL', 'CUB', 'SDN', 'BLZ', 'GNB', 'HTI', 'XKX', 'TGO', 'COM', 'ZWE', 'HRV',
+                   'IRQ', 'SSD', 'CIV', 'LBR', 'BWA']}
+
+df_country = pd.DataFrame(data)
+df_country
+
+# %%
+import requests
+import pandas as pd
+
+def get_wgi_data(country_code, indicator_id, start_year=1980, end_year=2025):
+    url = f"https://api.worldbank.org/v2/country/{country_code}/indicator/{indicator_id}?date={start_year}:{end_year}&format=json"
+    response = requests.get(url)
+    data = response.json()
+
+    if len(data) < 2 or not isinstance(data[1], list):
+        print("No data found or invalid response.")
+        return None
+
+    records = []
+    for entry in data[1]:
+        year = entry['date']
+        value = entry['value']
+        records.append({'year': int(year), 'value': value})
+
+    df = pd.DataFrame(records)
+    df = df.sort_values('year', ascending=True)
+    return df
+
+
+# %%
+countries = df_country['alpha3'].tolist()
+indicators = {
+    'Voice and Accountability': 'VA.EST',
+    'Political Stability': 'PV.EST',
+    'Government Effectiveness': 'GE.EST',
+    'Regulatory Quality': 'RQ.EST',
+    'Rule of Law': 'RL.EST',
+    'Control of Corruption': 'CC.EST'
+}
+
+all_data = []
+
+# APIで世銀の開発指標を取得
+for country in countries:
+    for name, ind_id in indicators.items():
+        df_tmp = get_wgi_data(country, ind_id)
+        if df_tmp is not None:
+            df_tmp['country'] = country
+            df_tmp['indicator'] = name
+            all_data.append(df_tmp)
+
+# データ統合
+df_all = pd.concat(all_data, ignore_index=True)
+df_all
+
+# %%
+
+df_pivot = df_all.pivot(index=['year', 'country'], columns='indicator', values='value')
+df_pivot = df_pivot.reset_index()
+df_pivot
+
+# %%
+df = df.rename(columns={'国名':'country'})
+df = df.merge(df_country, on='country', how='left')
+df
+
+# %%
+df_pivot['join_flg'] = True
+df_pivot
+
+# %%
+# Convert to datetime and extract year
+df['project_start_year'] = pd.to_datetime(df['プロジェクト期間開始_実績'], errors='coerce').dt.year
+df['project_end_year'] = pd.to_datetime(df['プロジェクト期間終了_実績'], errors='coerce').dt.year
+
+# Replace NaT with 0 and convert to integer
+df['project_start_year'] = df['project_start_year'].fillna(0).astype(int)
+df['project_end_year'] = df['project_end_year'].fillna(0).astype(int)
+
+# %%
+
+df['join_flg'] = (
+    (
+        (df['project_start_year']!=0) & (df['project_end_year']!=0)
+    )
+    &(
+        (df['project_start_year'].notna()) & (df['project_end_year'].notna())
+    )
+)
+
+# %%
+#df_pivot['project_start_year'] = df_pivot['year']
+#df_pivot['project_end_year'] = df_pivot['year']
+df_pivot.rename(columns={'country': 'alpha3'}, inplace=True)
+df = df.merge(df_pivot, on=['alpha3','join_flg'], how='left')
+df
+
+# %%
+# 開始・終了期間のみのレコードを残して平均をとる
+# それ以外のレコードを除外する。条件は 1 or 2 or 3
+# 1.開始終了がとれなかったもの(join_flg false)
+# 2.複数地域のため、開始終了は取れたが、複数地域のため、値が一意にならなかったもの（地域詳細がNULL）
+# 3.開始・終了年以内のレコード
+cond = (
+    (~df['join_flg']) |
+    (df['地域詳細'].isna()) |
+    (
+        (df['project_start_year'] <= df['year'])&
+        (df['year'] <= df['project_end_year'])
+    )
+)
+df = df[cond]
+df
+
+# %%
+group_keys = ['file']
+
+# 平均を取りたいカラムをリストで定義
+mean_cols = [
+    'Control of Corruption',
+    'Government Effectiveness',
+    'Political Stability',
+    'Regulatory Quality',
+    'Rule of Law',
+    'Voice and Accountability',
+]
+
+# agg_dict を動的に生成
+agg_dict = {
+    col: ('mean' if col in mean_cols else 'first')
+    for col in df.columns
+    if col not in group_keys
+}
+
+# groupby + agg
+df_grouped = (
+    df
+    .groupby(group_keys, as_index=False)
+    .agg(agg_dict)
+)
+
+# （任意）列順を調整
+cols_order = group_keys + [c for c in df_grouped.columns if c not in group_keys]
+df_grouped = df_grouped[cols_order]
+
+df_grouped
+
+# %%
+map = {
+    'Control of Corruption': 'control_of_corruption',
+    'Voice and Accountability': 'voice_and_accountability',
+    'Political Stability': 'political_stability',
+    'Government Effectiveness': 'government_effectiveness',
+    'Regulatory Quality': 'regulatory_quality',
+    'Rule of Law': 'rule_of_law',
+}
+df_grouped.rename(columns=map, inplace=True)
+df_grouped
+
+# %%
+df_grouped = df_grouped.drop(columns="year")
+df_grouped.to_csv('df_check_7.csv')
+
+# %%
+# 検算
+cols = ['alpha3','プロジェクト期間開始_実績','プロジェクト期間終了_実績','control_of_corruption', 'voice_and_accountability', 'political_stability', 'government_effectiveness','regulatory_quality','rule_of_law']
+df_grouped[df_grouped['file']=='https://www2.jica.go.jp/ja/evaluation/pdf/2015_0602104_4_f.pdf'][cols]
+
+# %%
+df_check = df_pivot[((2007 <= df_pivot['year']) & (df_pivot['year'] <= 2013) & (df_pivot['alpha3'] == 'CHN'))]
+df_check = df_check.groupby('alpha3').agg('mean')
+df_check
+
+# %%
+
