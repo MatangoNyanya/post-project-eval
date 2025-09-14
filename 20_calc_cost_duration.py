@@ -7,19 +7,20 @@ import pandas as pd
 
 # %%
 
-df = pd.read_csv("df_check_3.csv",index_col=0)
+df = pd.read_csv("df_check_4.csv",index_col=0)
+#df
 
 # %%
 
 # 効率性_コストのカラムから「約」と「超」を削除する
-df['効率性_コスト'] = df['効率性_コスト'].str.replace('約', '', regex=False)
-df['効率性_コスト'] = df['効率性_コスト'].str.replace(' ', '', regex=False)
-df['効率性_コスト'] = df['効率性_コスト'].str.replace('　', '', regex=False)
-df['効率性_コスト'] = df['効率性_コスト'].str.replace('以上', '', regex=False)
-df['効率性_コスト'] = df['効率性_コスト'].str.replace('未満', '', regex=False)
-df['効率性_コスト'] = df['効率性_コスト'].str.replace('超', '', regex=False)
-df['効率性_コスト'] = df['効率性_コスト'].str.replace('以下', '', regex=False)
-df['効率性_コスト'] = df['効率性_コスト'].str.replace('計画比', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('約', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace(' ', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('　', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('以上', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('未満', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('超', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('以下', '', regex=False)
+df['効率性_コスト'] = df['効率性_コスト'].astype(str).str.replace('計画比', '', regex=False)
 
 # 確認
 df[df['file'] == 'https://www2.jica.go.jp/ja/evaluation/pdf/2018_1001020_4_f.pdf']['効率性_コスト']
@@ -246,4 +247,74 @@ df_agg[cols] = df_agg[cols].replace(0, np.nan)
 
 # %%
 
-df_agg.to_csv('df_check_4.csv', index=False)
+df_agg[df_agg['案件名'].str.contains('スラバヤ空港建設事業', na=False)]
+
+# %%
+
+# それでも重複した場合に備えてキー単位で連番を振って削除
+
+def add_sequential_number_groupby(df, key_column, new_column_name='sequential_id'):
+  """
+  特定のカラムをキーに連番を付与する
+
+  Args:
+    df (pd.DataFrame): 対象のDataFrame
+    key_column (str): キーとなるカラム名
+    new_column_name (str): 新しい連番カラム名
+
+  Returns:
+    pd.DataFrame: 連番カラムが追加されたDataFrame
+  """
+  df[new_column_name] = df.groupby(key_column, dropna=False).cumcount(ascending=False) + 1
+  return df
+
+# keyが同じものを重複プロジェクトとして削除する
+# webサイトのつくり上、フェーズ１と２が分かれて掲載されているが、どちらも同じPDFファイルの場合重複を削除する
+key = ['国名','プロジェクト期間開始_計画時', 'プロジェクト期間終了_実績','事業形態','評価年度','総合評価']
+df_agg = df_agg.sort_values(key)
+df_agg = add_sequential_number_groupby(df_agg, key, new_column_name='連番')
+df_agg_filtered = df_agg[df_agg['連番']==1]
+
+# %%
+
+
+count = len(df_agg_filtered)
+print(f"レコード数: {count}")
+select_col = df_agg_filtered.columns
+df_agg_filtered.to_csv('df_check_4_ori.csv', index=False)
+
+# %%
+
+import numpy as np
+import pandas as pd
+
+group_keys = ['国名','プロジェクト期間開始_計画時', 'プロジェクト期間終了_実績','評価年度','総合評価']
+
+# 1) 同じキーで1行だけ残し、他は削除候補(True)
+df_agg_filtered['del_flg'] = df_agg_filtered.groupby(group_keys).cumcount() > 0
+
+# 2) 同じキー内で type の種類数（nunique）を各行に付与
+type_nuniq = df_agg_filtered.groupby(group_keys)['事業形態'].transform('nunique')
+
+# 3) new_type の決定
+#   - 同じキーで type が複数種類ある → 代表行(del_flg=False)は '複合'、それ以外は元のtype
+#   - 同じキーで type が1種類だけ → すべて元のtype
+df_agg_filtered['new_type'] = np.where(
+    type_nuniq > 1,
+    np.where(df_agg_filtered['del_flg'], df_agg_filtered['事業形態'], '複合'),
+    df_agg_filtered['事業形態']
+)
+
+
+count = len(df_agg_filtered)
+print(f"レコード数: {count}")
+
+# %%
+
+df_agg_filtered[~df_agg_filtered['del_flg']]
+df_agg_filtered['事業形態']=df_agg_filtered['new_type']
+df_agg_filtered=df_agg_filtered[select_col]
+
+# %%
+
+df_agg_filtered.to_csv('df_check_4.csv', index=False)
