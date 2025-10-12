@@ -133,11 +133,9 @@ df[df['file'] == 'https://www2.jica.go.jp/ja/evaluation/pdf/2016_0803600_4_f.pdf
 df['期間差_計画'] = (
     (df['プロジェクト期間終了_計画時'] - df['プロジェクト期間開始_計画時']).dt.days / 30
 )
-df['期間差_計画'] = df['期間差_計画'][df['期間差_計画'].notna()]
 df['期間差_実績'] = (
     (df['プロジェクト期間終了_実績'] - df['プロジェクト期間開始_実績']).dt.days / 30
 )
-df['期間差_実績'] = df['期間差_実績'][df['期間差_実績'].notna()]
 
 # %%
 
@@ -318,3 +316,4 @@ df_agg_filtered=df_agg_filtered[select_col]
 # %%
 
 df_agg_filtered.to_csv('df_check_4.csv', index=False)
+print(f"レコード数: {len(df_agg_filtered)}")

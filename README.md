@@ -49,3 +49,22 @@ post-project-eval/
   ├── 60_assign_toughness.py
   └── 99_rename_df.py
 ```
+
+## 依存関係 / Requirements
+
+プロジェクトの Python 依存パッケージは `requirements.txt` に記載されています。基本的な実行に必要なパッケージの例は以下です:
+
+- nbformat
+- nbclient
+- pandas
+
+インストール手順（macOS / bash）:
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -U pip
+pip install -r requirements.txt
+```
+
+ノート: 各ノートブックやスクリプトで追加パッケージが必要になることがあります。必要に応じて `requirements.txt` を更新してください。

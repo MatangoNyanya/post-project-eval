@@ -143,9 +143,17 @@ for col in df.columns:
 
 # %%
 
-import pandas as pd
-import matplotlib.pyplot as plt
-import japanize_matplotlib
+def _is_notebook_env():
+    try:
+        from IPython import get_ipython  # type: ignore
+
+        shell = get_ipython()
+        return bool(shell and shell.__class__.__name__ == "ZMQInteractiveShell")
+    except Exception:
+        return False
+
+
+DISPLAY_GRAPHS = _is_notebook_env()
 
 # cat_flgを含むカラムを抽出
 cat_flg_cols = [col for col in df.columns if "cat_flg" in col]
@@ -167,28 +175,27 @@ result_df = result_df[result_df["true_count"] > 0]
 # 大きい順にソート
 result_df = result_df.sort_values("true_count", ascending=False)
 
-# 棒グラフを描画
-plt.figure(figsize=(15, 6))
-plt.bar(result_df["category"], result_df["true_count"])
-plt.xlabel("カテゴリ")
-plt.ylabel("TRUEの数")
-plt.title("カテゴリごとのTRUEの数")
-plt.xticks(rotation=90)  # x軸ラベルを90度回転
-plt.tight_layout()
-plt.show()
+# 棒グラフ/円グラフは notebook 実行時のみ描画
+if DISPLAY_GRAPHS:
+    import matplotlib.pyplot as plt  # noqa: WPS433
+    import japanize_matplotlib  # noqa: F401, WPS433
 
-# %%
+    plt.figure(figsize=(15, 6))
+    plt.bar(result_df["category"], result_df["true_count"])
+    plt.xlabel("カテゴリ")
+    plt.ylabel("TRUEの数")
+    plt.title("カテゴリごとのTRUEの数")
+    plt.xticks(rotation=90)  # x軸ラベルを90度回転
+    plt.tight_layout()
+    plt.show()
 
-import matplotlib.pyplot as plt
-# 前のコードで作成されたdfとresult_dfを使用
-
-# 円グラフを作成
-plt.figure(figsize=(8, 8))
-plt.pie(result_df['true_count'], labels=result_df['category'], autopct='%1.1f%%', startangle=90)
-plt.title('分野ごとの件数割合')
-plt.axis('equal')  # 円形にする
-plt.tight_layout()
-plt.show()
+    # 円グラフを作成
+    plt.figure(figsize=(8, 8))
+    plt.pie(result_df['true_count'], labels=result_df['category'], autopct='%1.1f%%', startangle=90)
+    plt.title('分野ごとの件数割合')
+    plt.axis('equal')  # 円形にする
+    plt.tight_layout()
+    plt.show()
 
 # %%
 
@@ -202,73 +209,74 @@ grouped_df
 
 # %%
 
-import matplotlib.pyplot as plt
+if DISPLAY_GRAPHS:
+    import matplotlib.pyplot as plt  # noqa: WPS433
 
-# 前のコードで作成されたgrouped_dfを使用
+    # 前のコードで作成されたgrouped_dfを使用
 
-# 技協のデータのみ抽出
-gikyo_df = grouped_df[grouped_df.index == '技協']
+    # 技協のデータのみ抽出
+    gikyo_df = grouped_df[grouped_df.index == '技協']
 
-# もし技協のデータが存在しない場合、処理をスキップ
-if gikyo_df.empty:
-    print("技協のデータがありません。")
-else:
-    # 各カテゴリの件数を取得
-    category_counts = gikyo_df.iloc[0].sort_values(ascending=False)
+    # もし技協のデータが存在しない場合、処理をスキップ
+    if gikyo_df.empty:
+        print("技協のデータがありません。")
+    else:
+        # 各カテゴリの件数を取得
+        category_counts = gikyo_df.iloc[0].sort_values(ascending=False)
 
-    # 棒グラフを作成
-    plt.figure(figsize=(12, 6))
-    plt.bar(category_counts.index, category_counts.values)
-    plt.xlabel('カテゴリ')
-    plt.ylabel('件数')
-    plt.title('技協データのカテゴリ別件数 (降順)')
-    plt.xticks(rotation=90)  # x軸ラベルを回転
-    plt.tight_layout()
-    plt.show()
+        # 棒グラフを作成
+        plt.figure(figsize=(12, 6))
+        plt.bar(category_counts.index, category_counts.values)
+        plt.xlabel('カテゴリ')
+        plt.ylabel('件数')
+        plt.title('技協データのカテゴリ別件数 (降順)')
+        plt.xticks(rotation=90)  # x軸ラベルを回転
+        plt.tight_layout()
+        plt.show()
 
-# %%
+    # %%
 
-# 有償のデータのみ抽出
-gikyo_df = grouped_df[grouped_df.index == '有償']
+    # 有償のデータのみ抽出
+    gikyo_df = grouped_df[grouped_df.index == '有償']
 
-# もし技協のデータが存在しない場合、処理をスキップ
-if gikyo_df.empty:
-    print("技協のデータがありません。")
-else:
-    # 各カテゴリの件数を取得
-    category_counts = gikyo_df.iloc[0].sort_values(ascending=False)
+    # もし技協のデータが存在しない場合、処理をスキップ
+    if gikyo_df.empty:
+        print("技協のデータがありません。")
+    else:
+        # 各カテゴリの件数を取得
+        category_counts = gikyo_df.iloc[0].sort_values(ascending=False)
 
-    # 棒グラフを作成
-    plt.figure(figsize=(12, 6))
-    plt.bar(category_counts.index, category_counts.values)
-    plt.xlabel('カテゴリ')
-    plt.ylabel('件数')
-    plt.title('有償データのカテゴリ別件数 (降順)')
-    plt.xticks(rotation=90)  # x軸ラベルを回転
-    plt.tight_layout()
-    plt.show()
+        # 棒グラフを作成
+        plt.figure(figsize=(12, 6))
+        plt.bar(category_counts.index, category_counts.values)
+        plt.xlabel('カテゴリ')
+        plt.ylabel('件数')
+        plt.title('有償データのカテゴリ別件数 (降順)')
+        plt.xticks(rotation=90)  # x軸ラベルを回転
+        plt.tight_layout()
+        plt.show()
 
-# %%
+    # %%
 
-# 無償のデータのみ抽出
-gikyo_df = grouped_df[grouped_df.index == '無償']
+    # 無償のデータのみ抽出
+    gikyo_df = grouped_df[grouped_df.index == '無償']
 
-# もし技協のデータが存在しない場合、処理をスキップ
-if gikyo_df.empty:
-    print("技協のデータがありません。")
-else:
-    # 各カテゴリの件数を取得
-    category_counts = gikyo_df.iloc[0].sort_values(ascending=False)
+    # もし技協のデータが存在しない場合、処理をスキップ
+    if gikyo_df.empty:
+        print("技協のデータがありません。")
+    else:
+        # 各カテゴリの件数を取得
+        category_counts = gikyo_df.iloc[0].sort_values(ascending=False)
 
-    # 棒グラフを作成
-    plt.figure(figsize=(12, 6))
-    plt.bar(category_counts.index, category_counts.values)
-    plt.xlabel('カテゴリ')
-    plt.ylabel('件数')
-    plt.title('無償データのカテゴリ別件数 (降順)')
-    plt.xticks(rotation=90)  # x軸ラベルを回転
-    plt.tight_layout()
-    plt.show()
+        # 棒グラフを作成
+        plt.figure(figsize=(12, 6))
+        plt.bar(category_counts.index, category_counts.values)
+        plt.xlabel('カテゴリ')
+        plt.ylabel('件数')
+        plt.title('無償データのカテゴリ別件数 (降順)')
+        plt.xticks(rotation=90)  # x軸ラベルを回転
+        plt.tight_layout()
+        plt.show()
 
 # %%
 
@@ -302,8 +310,6 @@ df = df.drop(old_col, axis=1)
 # %%
 
 import pandas as pd
-import matplotlib.pyplot as plt
-import japanize_matplotlib
 
 # cat_flgを含むカラムを抽出
 cat_flg_cols = [col for col in df.columns if "flg_fix" in col]
@@ -325,15 +331,19 @@ result_df = result_df[result_df["true_count"] > 0]
 # 大きい順にソート
 result_df = result_df.sort_values("true_count", ascending=False)
 
-# 棒グラフを描画
-plt.figure(figsize=(15, 6))
-plt.bar(result_df["category"], result_df["true_count"])
-plt.xlabel("カテゴリ")
-plt.ylabel("TRUEの数")
-plt.title("カテゴリごとのTRUEの数")
-plt.xticks(rotation=90)  # x軸ラベルを90度回転
-plt.tight_layout()
-plt.show()
+if DISPLAY_GRAPHS:
+    import matplotlib.pyplot as plt  # noqa: WPS433
+    import japanize_matplotlib  # noqa: F401, WPS433
+
+    # 棒グラフを描画
+    plt.figure(figsize=(15, 6))
+    plt.bar(result_df["category"], result_df["true_count"])
+    plt.xlabel("カテゴリ")
+    plt.ylabel("TRUEの数")
+    plt.title("カテゴリごとのTRUEの数")
+    plt.xticks(rotation=90)  # x軸ラベルを90度回転
+    plt.tight_layout()
+    plt.show()
 
 # %%
 
@@ -342,6 +352,6 @@ result_df
 # %%
 
 df.to_csv("df_check_13.csv")
+print(f"レコード数: {len(df)}")
 
 # %%
-

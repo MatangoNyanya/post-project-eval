@@ -4,12 +4,8 @@
 # %%
 
 import pandas as pd
-df = pd.read_csv("df_check_12.csv", index_col=0)
+df = pd.read_csv("df_check_14.csv", index_col=0)
 
-# %%
-
-for c in df.columns:
-    print(c)
 
 # %%
 
@@ -24,6 +20,7 @@ rename = {
     '地域詳細':'region_detail',
     '地域':'region',
     '事業形態':'type',
+    '総合評価':'total_eval',
 }
 df=df.rename(columns=rename)
 df
@@ -35,11 +32,6 @@ df['total_eval'].unique()
 # %%
 
 df.to_csv('df_check_99.csv')
+print(f"レコード数: {len(df)}")
 
-# %%
-
-for c in df.columns.tolist():
-    print(c)
-
-# %%
 

@@ -616,6 +616,7 @@ df[df['file'].isin(fix_target['file'].tolist())][cols]
 
 # 保存
 df.to_csv('df_check_4.csv')
+print(f"レコード数: {len(df)}")
 
 # %%
 

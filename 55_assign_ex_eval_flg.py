@@ -40,7 +40,7 @@ df[col]
 # %%
 
 df.to_csv('df_check_11.csv')
-
+print(f"レコード数: {len(df)}")
 # %%
 
 pd.set_option('display.max_rows', 900)

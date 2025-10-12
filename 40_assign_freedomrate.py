@@ -95,6 +95,10 @@ df_long
 
 # %%
 
+df_long.to_csv('out_csv/freedomrate.csv')
+
+# %%
+
 
 df['join_flg'] = (
     (
@@ -164,23 +168,17 @@ df_grouped
 df_grouped = df_grouped.drop(columns="Year")
 df_grouped = df_grouped.drop(columns='Unnamed: 0')
 df_grouped.to_csv('df_check_8.csv')
-
-# %%
-
-anti_join.to_csv('check')
-
-# %%
-
+print(f"レコード数: {len(df_grouped)}")
 
 # %%
 
 # 検算
 cols = ['alpha3','プロジェクト期間開始_実績','プロジェクト期間終了_実績','freedom_house_score']
-df_grouped[df_grouped['file']=='https://www2.jica.go.jp/ja/evaluation/pdf/2015_0602104_4_f.pdf'][cols]
+df_grouped[df_grouped['file']=='https://www2.jica.go.jp/ja/evaluation/pdf/2021_1202321_4_f.pdf'][cols]
 
 # %%
 
-df_long = df_long[((2007 <= df_long['Year']) & (df_long['Year'] <= 2013) & (df_long['alpha3'] == 'CHN'))]
+df_long = df_long[((2014 <= df_long['Year']) & (df_long['Year'] <= 2018) & (df_long['alpha3'] == 'LKA'))]
 df_long
 
 # %%
