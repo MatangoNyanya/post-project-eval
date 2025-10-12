@@ -1,0 +1,7 @@
+nbformat
+nbclient
+pandas
+matplotlib
+japanize_matplotlib
+requests
+numpy

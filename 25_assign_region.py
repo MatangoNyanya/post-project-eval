@@ -186,7 +186,4 @@ df.head(10)
 # %%
 
 df.to_csv('df_check_5.csv')
-
-# %%
-
-df
+print(f"レコード数: {len(df)}")

@@ -75,6 +75,10 @@ df_long
 
 # %%
 
+df_long.to_csv('out_csv/population.csv')
+
+# %%
+
 
 df['join_flg'] = (
     (
@@ -142,6 +146,7 @@ df_grouped
 
 df_grouped.drop(columns='Year')
 df_grouped.to_csv('df_check_10.csv')
+print(f"レコード数: {len(df_grouped)}")
 
 # %%
 

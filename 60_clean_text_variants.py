@@ -196,79 +196,11 @@ df['評価会社'] = df['評価会社'].apply(
 
 col = '評価会社' 
 unique_sorted = sorted(df[col].dropna().unique())
-unique_sorted
-
-# %%
-
-import matplotlib.pyplot as plt
-import japanize_matplotlib
-
-# 総合評価を数値に変換
-df['total_eval'] = df['総合評価'].map({'非常に高い': 4, '高い': 3, '中程度': 2,'一部課題がある': 2, '一部に課題があると判断される': 2, '低い': 1,'非常に低い': 1})
-
-
-df_agg = df.groupby('評価会社')['total_eval'].agg(['mean', 'count']).reset_index()
-
-# Rename columns for clarity
-df_agg.columns = ['Evaluator Group', 'Average Total Eval', 'Count']
-
-# Sort for better visualization
-df_agg = df_agg.sort_values('Average Total Eval')
-
-# Create a bar chart of the average total eval
-plt.figure(figsize=(50, 30))
-plt.bar(df_agg['Evaluator Group'], df_agg['Average Total Eval'])
-plt.xlabel('評価者グループ')
-plt.ylabel('合計評価の平均')
-plt.title('評価者グループごとの合計評価平均')
-plt.xticks(rotation=45, ha='right')
-plt.tight_layout()
-plt.show()
-
-# Print the aggregated dataframe
-print("Evaluator Groupごとの合計評価の平均と集約数:")
-df_agg
-
-# %%
-
-print(df_agg.columns.tolist())
-
-# %%
-
-
-def calculate_group_mean_excluding_self(row, df, group_col, value_col):
-  """
-  Calculates the mean of 'value_col' for the group in 'group_col' that the row belongs to,
-  excluding the value from the current row.
-  """
-  group_data = df[df[group_col] == row[group_col]]
-  sum_excluding_self = group_data[value_col].sum() - row[value_col]
-  count_excluding_self = group_data[value_col].count() - 1
-
-  if count_excluding_self > 0:
-    return sum_excluding_self / count_excluding_self
-  else:
-    # Handle the case where the group only has one member (the current row)
-    return None
-
-df['evaluator_avg_other_pjt'] = df.apply(
-    lambda row: calculate_group_mean_excluding_self(row, df, '評価会社', 'total_eval'),
-    axis=1
-)
-
-df
-
-
-# %%
-
-# 検算
-col=['評価会社','案件名','total_eval', 'evaluator_avg_other_pjt']
-df[df['評価会社']=='ガボン事務所'][col]
 
 # %%
 
 df.to_csv("df_check_12.csv")
-
+print(f"レコード数: {len(df)}")
 # %%
 
 

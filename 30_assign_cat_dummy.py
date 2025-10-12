@@ -3,6 +3,25 @@
 
 # %%
 
+# 実行環境判定: Jupyter Notebook (ZMQInteractiveShell) かどうかを判定
+try:
+  from IPython import get_ipython
+  _shell = get_ipython()
+  IS_NOTEBOOK = bool(_shell and _shell.__class__.__name__ == "ZMQInteractiveShell")
+except Exception:
+  IS_NOTEBOOK = False
+
+# ノートブック以外（.py で実行される場合）は matplotlib の GUI 表示を抑止
+if not IS_NOTEBOOK:
+  try:
+    import matplotlib
+    matplotlib.use('Agg')
+    # preload pyplot and disable show to avoid blocking GUI windows
+    import matplotlib.pyplot as _plt
+    _plt.show = lambda *a, **k: None
+  except Exception:
+    pass
+
 import pandas as pd
 df = pd.read_csv('df_check_5.csv', index_col=0)
 df.columns
@@ -143,6 +162,7 @@ df[col].head(1)
 # %%
 
 df.to_csv('df_check_6.csv')
+print(f"レコード数: {len(df)}")
 
 # %%
 

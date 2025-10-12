@@ -55,21 +55,36 @@ import pandas as pd
 
 def get_wgi_data(country_code, indicator_id, start_year=1980, end_year=2025):
     url = f"https://api.worldbank.org/v2/country/{country_code}/indicator/{indicator_id}?date={start_year}:{end_year}&format=json"
-    response = requests.get(url)
-    data = response.json()
+    
+    try:
+        response = requests.get(url, timeout=100)
+        response.raise_for_status()  # HTTPエラーなら例外発生
+        
+        try:
+            data = response.json()
+        except json.JSONDecodeError:
+            print(f"JSONデコード失敗: {url}")
+            print(f"レスポンス: {response.text[:200]}")  # 最初の200文字だけ表示
+            return None
 
-    if len(data) < 2 or not isinstance(data[1], list):
-        print("No data found or invalid response.")
+    except requests.exceptions.RequestException as e:
+        print(f"HTTPリクエストエラー: {e}")
         return None
 
+    # データが想定通りかチェック
+    if len(data) < 2 or not isinstance(data[1], list):
+        print(f"データなしまたは不正なレスポンス: {url}")
+        return None
+
+    # データ整形
     records = []
     for entry in data[1]:
-        year = entry['date']
-        value = entry['value']
-        records.append({'year': int(year), 'value': value})
+        year = entry.get('date')
+        value = entry.get('value')
+        if year is not None:
+            records.append({'year': int(year), 'value': value})
 
-    df = pd.DataFrame(records)
-    df = df.sort_values('year', ascending=True)
+    df = pd.DataFrame(records).sort_values('year', ascending=True)
     return df
 
 
@@ -217,6 +232,7 @@ df_grouped
 
 df_grouped = df_grouped.drop(columns="year")
 df_grouped.to_csv('df_check_7.csv')
+print(f"レコード数: {len(df_grouped)}")
 
 # %%
 
