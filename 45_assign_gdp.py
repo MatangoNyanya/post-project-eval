@@ -33,6 +33,7 @@ df_long = df_long[['Country Code','Year', 'gdp_growth']]
 # 結果確認
 df_long['join_flg'] = True
 df_long = df_long.rename(columns={'Country Code': 'alpha3'})
+df_long.to_csv('out_csv/gdp.csv')
 
 df_long
 

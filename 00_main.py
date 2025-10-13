@@ -46,14 +46,14 @@ PIPELINE_RUNS: Dict[str, List[str]] = {
         "30_assign_cat_dummy.ipynb",
         "35_assign_wgi.ipynb",
         "40_assign_freedomrate.ipynb",
-        "45_assign_gdp_at_pjt_start.ipynb",
-        #"45_assign_gdp.ipynb",
+        #"45_assign_gdp_at_pjt_start.ipynb",
+        "45_assign_gdp.ipynb",
         "50_assign_population.ipynb",
         "55_assign_ex_eval_flg.ipynb",
         "60_clean_text_variants.ipynb",
         "65_unify_sectors.ipynb",
         "70_assign_rate.ipynb",
-        "99_rename_df.ipynb",    
+        "99_rename_df.ipynb",
     ],
 }
 
