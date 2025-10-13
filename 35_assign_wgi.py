@@ -160,6 +160,7 @@ df['join_flg'] = (
 #df_pivot['project_start_year'] = df_pivot['year']
 #df_pivot['project_end_year'] = df_pivot['year']
 df_pivot.rename(columns={'country': 'alpha3'}, inplace=True)
+df_pivot.to_csv('out_csv/wgi.csv')
 df = df.merge(df_pivot, on=['alpha3','join_flg'], how='left')
 df
 

@@ -17,7 +17,7 @@
 # %%
 
 # APIキーを設定
-api_key = "xxxxxx"
+api_key = "YOUR_API_KEY"
 
 # %%
 
