@@ -9,6 +9,12 @@ df = pd.read_csv("df_check_14.csv", index_col=0)
 
 # %%
 
+# 総合評価を数値に変換
+df['total_eval'] = df['総合評価'].map({'非常に高い': 4, '高い': 3, '中程度': 2,'一部課題がある': 2, '一部に課題があると判断される': 2, '低い': 1,'非常に低い': 1})
+
+
+# %%
+
 rename = {
     '評価年度':'eval_year',
     '評価会社':'evaluator_group',
@@ -20,7 +26,6 @@ rename = {
     '地域詳細':'region_detail',
     '地域':'region',
     '事業形態':'type',
-    '総合評価':'total_eval',
 }
 df=df.rename(columns=rename)
 df
