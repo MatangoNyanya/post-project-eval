@@ -2,3 +2,4 @@
 .cache/
 _executed/
 .git-ssh/
+tmp/
