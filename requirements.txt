@@ -6,3 +6,10 @@ japanize_matplotlib
 requests
 numpy
 xgboost
+scikit-learn
+transformers
+shap
+lightgbm
+seaborn
+fugashi
+unidic_lite
