@@ -13,3 +13,4 @@ lightgbm
 seaborn
 fugashi
 unidic_lite
+optuna

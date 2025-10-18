@@ -41,7 +41,16 @@ def find_best_threshold(y_true, proba, objective="balanced_accuracy"):
     return float(best_t), float(best_score)
 
 
-def train_and_evaluate_model(train_df, valid_df, model_name, n_splits=5, threshold_objective="balanced_accuracy"):
+def train_and_evaluate_model(
+    train_df,
+    valid_df,
+    model_name,
+    n_splits=5,
+    threshold_objective="balanced_accuracy",
+    use_optuna=False,
+    n_trials=20,
+    optuna_timeout=None,
+):
     train_df = train_df.copy()
     valid_df = valid_df.copy()
 
@@ -80,6 +89,64 @@ def train_and_evaluate_model(train_df, valid_df, model_name, n_splits=5, thresho
         is_unbalance=True,
     )
 
+    tfidf_params = dict(max_features=10000, stop_words="english")
+
+    if use_optuna:
+        try:
+            import optuna
+        except ImportError as e:
+            raise ImportError("use_optuna=True の場合は optuna が必要です。pip install optuna を実行してください。") from e
+
+        optuna_splits = min(3, n_splits)
+        kf_optuna = StratifiedKFold(n_splits=optuna_splits, shuffle=True, random_state=42)
+
+        def _objective(trial):
+            params = LGB_PARAMS.copy()
+            params.update(
+                {
+                    "learning_rate": trial.suggest_float("learning_rate", 0.005, 0.2, log=True),
+                    "num_leaves": trial.suggest_int("num_leaves", 16, 256),
+                    "min_child_samples": trial.suggest_int("min_child_samples", 5, 100),
+                    "subsample": trial.suggest_float("subsample", 0.6, 1.0),
+                    "colsample_bytree": trial.suggest_float("colsample_bytree", 0.6, 1.0),
+                    "reg_alpha": trial.suggest_float("reg_alpha", 1e-8, 10.0, log=True),
+                    "reg_lambda": trial.suggest_float("reg_lambda", 1e-8, 10.0, log=True),
+                    "max_depth": trial.suggest_categorical("max_depth", [-1, 3, 4, 5, 6, 7, 8, 9, 10, 12]),
+                }
+            )
+
+            oof = np.zeros(len(train_df), dtype=float)
+            for tr_idx, va_idx in kf_optuna.split(tokenized_train, y_train):
+                vec = TfidfVectorizer(**tfidf_params)
+                X_tr = vec.fit_transform(tokenized_train[tr_idx])
+                X_va = vec.transform(tokenized_train[va_idx])
+
+                model = lgb.LGBMClassifier(**params)
+                callbacks = [lgb.early_stopping(stopping_rounds=100, verbose=False)]
+                model.fit(
+                    X_tr,
+                    y_train[tr_idx],
+                    eval_set=[(X_va, y_train[va_idx])],
+                    eval_metric="auc",
+                    callbacks=callbacks,
+                )
+                oof[va_idx] = model.predict_proba(X_va)[:, 1]
+
+            t_opt, score_opt = find_best_threshold(
+                y_train,
+                oof,
+                objective="macro_f1",
+            )
+            preds = (oof >= t_opt).astype(int)
+            return f1_score(y_train, preds, average="macro", zero_division=0)
+
+        study = optuna.create_study(direction="maximize")
+        study.optimize(_objective, n_trials=n_trials, timeout=optuna_timeout)
+        best_params = study.best_params
+        LGB_PARAMS.update(best_params)
+        print("[Optuna] Best params:", best_params)
+        print(f"[Optuna] Best OOF Macro F1: {study.best_value:.4f}")
+
     kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
     oof_proba = np.zeros(len(train_df), dtype=float)
     valid_proba_folds = []
@@ -93,7 +160,7 @@ def train_and_evaluate_model(train_df, valid_df, model_name, n_splits=5, thresho
         X_va_tokens = tokenized_train[va_idx]
         y_tr, y_va = y_train[tr_idx], y_train[va_idx]
 
-        vectorizer = TfidfVectorizer(max_features=10000, stop_words="english")
+        vectorizer = TfidfVectorizer(**tfidf_params)
         X_tr = vectorizer.fit_transform(X_tr_tokens)
         X_va = vectorizer.transform(X_va_tokens)
         X_valid = vectorizer.transform(tokenized_valid)
