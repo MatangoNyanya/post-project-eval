@@ -1,10 +1,15 @@
 import numpy as np
 import pandas as pd
-from sklearn.feature_extraction.text import TfidfVectorizer
-from transformers import AutoTokenizer
 from xgboost import XGBClassifier
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import accuracy_score, precision_score, recall_score, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score,
+    precision_score,
+    recall_score,
+    f1_score,
+    balanced_accuracy_score,
+    confusion_matrix,
+)
 import shap
 import matplotlib.pyplot as plt
 
@@ -31,10 +36,12 @@ def train_and_evaluate_model(train_df, valid_df):
     model = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss', random_state=42)
     model.fit(X_train, y_train_encoded)
     
+    y_valid_pred_encoded = model.predict(X_valid)
+
     # 予測と評価
     predictions_df = pd.DataFrame({
         'label': y_valid,
-        'predicted_label': label_encoder.inverse_transform(model.predict(X_valid)),
+        'predicted_label': label_encoder.inverse_transform(y_valid_pred_encoded),
         **valid_df.drop(columns=['label']).to_dict('series')
     })
     predictions_df.to_csv('results/classification/result_num_xgb.csv', index=False)
@@ -44,9 +51,11 @@ def train_and_evaluate_model(train_df, valid_df):
     conf_matrix_df.to_csv('results/classification/confusion_matrix_num_xgb.csv')
     
     # メトリクスの計算と表示
-    print("Accuracy:", accuracy_score(predictions_df['label'], predictions_df['predicted_label']))
-    print("Precision:", precision_score(predictions_df['label'], predictions_df['predicted_label'], average='macro'))
-    print("Recall:", recall_score(predictions_df['label'], predictions_df['predicted_label'], average='macro'))
+    print("Accuracy:", accuracy_score(y_valid_encoded, y_valid_pred_encoded))
+    print("Precision:", precision_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
+    print("Recall:", recall_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
+    print("Macro F1:", f1_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
+    print("Balanced Accuracy:", balanced_accuracy_score(y_valid_encoded, y_valid_pred_encoded))
     
     # SHAP解析とプロット
     explainer = shap.Explainer(model)
@@ -70,4 +79,3 @@ def train_and_evaluate_model(train_df, valid_df):
     
     
     plt.show()
-

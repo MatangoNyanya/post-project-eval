@@ -174,9 +174,10 @@ def train_and_evaluate_model(train_df, valid_df, model_name, n_splits=5, thresho
     final_vectorizer = vectorizers[-1]
     final_feature_names = feature_name_lists[-1]
     X_valid_final = final_vectorizer.transform(tokenized_valid)
+    X_valid_dense = X_valid_final.toarray()
 
     explainer = shap.TreeExplainer(final_model.booster_, feature_perturbation="interventional")
-    shap_values = explainer.shap_values(X_valid_final, check_additivity=False)
+    shap_values = explainer.shap_values(X_valid_dense, check_additivity=False)
 
     if isinstance(shap_values, list):
         shap_array = np.stack(shap_values, axis=0)
@@ -187,8 +188,6 @@ def train_and_evaluate_model(train_df, valid_df, model_name, n_splits=5, thresho
 
     if shap_array.ndim == 2:
         shap_array = shap_array[np.newaxis, ...]
-
-    X_valid_dense = X_valid_final.toarray()
 
     num_classes = shap_array.shape[0]
     if num_classes == 1:
