@@ -4,6 +4,7 @@
 中間ファイルも含めて公開していますが、最終出力だけ参照したい場合は、以下を参照してください。
 - df_check_pro.csv: Geminiでの抽出結果を保存したデータセット
 - df_check_99.csv: 各種整形及び世銀など外部サービスから取得した特徴量を追加したデータセット
+- df_check_ml.csv: 成功・失敗を予測する機械学習用のデータセット
 
 また、論文中でサンプリングチェックを実施した際のチェック対象は以下のデータセットです。
 - df_sample.csv
@@ -66,5 +67,3 @@ source .venv/bin/activate
 python -m pip install -U pip
 pip install -r requirements.txt
 ```
-
-ノート: 各ノートブックやスクリプトで追加パッケージが必要になることがあります。必要に応じて `requirements.txt` を更新してください。
