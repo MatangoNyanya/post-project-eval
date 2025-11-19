@@ -1,11 +1,11 @@
 llm:
-  label_sentence_count: 10
+  label_sentence_count: 20
 
 ui:
   cluster_slider:
     min: 2
     default: 20
-    max_cap: 50
+    max_cap: 100
     step: 1
   representative_slider:
     min: 3
