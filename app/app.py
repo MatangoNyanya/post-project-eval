@@ -25,9 +25,22 @@ if str(ROOT_DIR) not in sys.path:
 from app.cluster_utils import ClusterConfig, ClusterResult, run_clustering, wrap_text
 from app.llm_utils import label_cluster
 
-DATA_PATH = ROOT_DIR / "learning" / "output" / "kadai_text_with_rating_and_clusters_kyokun.csv"
-EMBED_PATH = ROOT_DIR / "learning" / "output" / "embeddings.npy"
+DATASET_CONFIGS = {
+    "一文": {
+        "data_path": ROOT_DIR
+        / "learning"
+        / "output"
+        / "kadai_text_with_rating_and_clusters_kyokun_mini.csv",
+        "embedding_path": ROOT_DIR / "learning" / "output" / "embeddings_mini.npy",
+    },
+    "400字": {
+        "data_path": ROOT_DIR / "learning" / "output" / "kadai_text_with_rating_and_clusters_kyokun.csv",
+        "embedding_path": ROOT_DIR / "learning" / "output" / "embeddings.npy",
+    },
+}
+DEFAULT_DATASET_KEY = "400字"
 CONFIG_PATH = ROOT_DIR / "app" / "config.yaml"
+LOGO_PATH = ROOT_DIR / "app" / "logo.png"
 
 DEFAULT_CONFIG = {
     "llm": {
@@ -86,8 +99,10 @@ LLM_CONFIG = APP_CONFIG.get("llm", {})
 PLOT_CONFIG = APP_CONFIG.get("plot", {})
 
 st.set_page_config(page_title="クラスタ分析ダッシュボード", layout="wide")
-st.title("クラスタリング可視化 & クラスタ意味付け")
-st.caption("条件を指定してクラスタリングを実行し、代表文とLLMによる意味付けを確認できます。")
+if LOGO_PATH.exists():
+    st.image(str(LOGO_PATH), width=350)
+st.title("LESMAP")
+st.caption("教訓クラスタリング分析アプリ 条件を指定してクラスタリングを実行し、代表文とLLMによる意味付けを確認できます。")
 
 
 @st.cache_data(show_spinner=False)
@@ -146,8 +161,29 @@ def _render_representatives(result: ClusterResult, cluster_id: int, llm_cfg: dic
     st.success(label_text)
 
 
-df_master = load_dataframe(str(DATA_PATH))
-embeddings_master = load_embeddings(str(EMBED_PATH))
+dset_keys = list(DATASET_CONFIGS.keys())
+default_dataset_index = (
+    dset_keys.index(DEFAULT_DATASET_KEY) if DEFAULT_DATASET_KEY in dset_keys else 0
+)
+selected_dataset_key = st.sidebar.radio(
+    "文章タイプ",
+    options=dset_keys,
+    index=default_dataset_index,
+    key="text_length_radio",
+)
+selected_dataset = DATASET_CONFIGS[selected_dataset_key]
+selected_data_path = selected_dataset["data_path"]
+selected_embedding_path = selected_dataset["embedding_path"]
+
+if not selected_data_path.exists():
+    st.error(f"データファイルが見つかりません: {selected_data_path}")
+    st.stop()
+if not selected_embedding_path.exists():
+    st.error(f"埋め込みファイルが見つかりません: {selected_embedding_path}")
+    st.stop()
+
+df_master = load_dataframe(str(selected_data_path))
+embeddings_master = load_embeddings(str(selected_embedding_path))
 
 with st.sidebar:
     st.header("クラスタリング条件")

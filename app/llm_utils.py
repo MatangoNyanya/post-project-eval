@@ -64,7 +64,6 @@ def _call_openai(sentences: Sequence[str], model: str = "gpt-5-mini") -> str:
     try:
         response = client.chat.completions.create(
             model=model,
-            temperature=0.3,
             messages=[
                 {
                     "role": "system",
@@ -84,7 +83,7 @@ def _cached_label(model: str, sentences_key: Tuple[str, ...]) -> str:
     return _call_openai(sentences_key, model=model)
 
 
-def label_cluster(sentences: Sequence[str], model: str = "gpt-4o-mini") -> str:
+def label_cluster(sentences: Sequence[str], model: str = "gpt-5-mini") -> str:
     """
     Return a human-readable label for a cluster using representative sentences.
     Results are cached per (model, sentences) combination to avoid repeated calls.
