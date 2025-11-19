@@ -1,0 +1,30 @@
+llm:
+  label_sentence_count: 10
+
+ui:
+  cluster_slider:
+    min: 2
+    default: 20
+    max_cap: 50
+    step: 1
+  representative_slider:
+    min: 3
+    max: 20
+    default: 5
+    step: 1
+
+plot:
+  hover_wrap_width: 40
+  height: 650
+  margin:
+    l: 10
+    r: 10
+    t: 40
+    b: 40
+  marker:
+    size: 10
+    colorscale: Rainbow
+    showscale: true
+    colorbar:
+      title: cluster
+    opacity: 0.85

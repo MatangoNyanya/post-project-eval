@@ -13,3 +13,10 @@ lightgbm
 seaborn
 fugashi
 unidic_lite
+streamlit
+plotly
+openai>=1.0.0
+umap-learn
+streamlit-plotly-events
+python-dotenv
+pyyaml
