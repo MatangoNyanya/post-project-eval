@@ -120,15 +120,12 @@ def run_clustering(
     config: ClusterConfig,
     sectors: Optional[Sequence[str]] = None,
     regions: Optional[Sequence[str]] = None,
-    eval_year_range: Optional[Tuple[int, int]] = None,
+    eval_year_range: Optional[Iterable[int]] = None,
+
 ) -> ClusterResult:
     """Replicate the clustering.ipynb workflow in pure Python."""
     filtered_df, filtered_embeddings = _filter_dataframe(
-        df,
-        embeddings,
-        sectors=sectors,
-        regions=regions,
-        eval_year_range=eval_year_range,
+        df, embeddings, sectors=sectors, regions=regions, eval_year_range=eval_year_range,
     )
     n_samples = len(filtered_df)
 
@@ -182,11 +179,7 @@ def run_clustering(
     )
     representatives["hover_text"] = representatives["text"].apply(wrap_text)
 
-    filters = {
-        "sectors": list(sectors or []),
-        "regions": list(regions or []),
-        "eval_year_range": eval_year_range if eval_year_range else (),
-    }
+    filters = {"sectors": list(sectors or []), "regions": list(regions or [])}
 
     return ClusterResult(
         data=filtered_df,
