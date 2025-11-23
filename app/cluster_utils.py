@@ -37,12 +37,17 @@ def _filter_dataframe(
     embeddings: np.ndarray,
     sectors: Optional[Sequence[str]] = None,
     regions: Optional[Sequence[str]] = None,
+    eval_year_range: Optional[Tuple[int, int]] = None,
 ) -> Tuple[pd.DataFrame, np.ndarray]:
     mask = pd.Series(True, index=df.index)
     if sectors:
         mask &= df["分野"].isin(list(sectors))
     if regions:
         mask &= df["region_detail"].isin(list(regions))
+    if eval_year_range:
+        years = pd.to_numeric(df.get("eval_year"), errors="coerce")
+        start, end = eval_year_range
+        mask &= years.between(start, end)
 
     filtered_df = df.loc[mask].reset_index(drop=True)
     filtered_embeddings = embeddings[mask.to_numpy()]
@@ -115,10 +120,15 @@ def run_clustering(
     config: ClusterConfig,
     sectors: Optional[Sequence[str]] = None,
     regions: Optional[Sequence[str]] = None,
+    eval_year_range: Optional[Tuple[int, int]] = None,
 ) -> ClusterResult:
     """Replicate the clustering.ipynb workflow in pure Python."""
     filtered_df, filtered_embeddings = _filter_dataframe(
-        df, embeddings, sectors=sectors, regions=regions
+        df,
+        embeddings,
+        sectors=sectors,
+        regions=regions,
+        eval_year_range=eval_year_range,
     )
     n_samples = len(filtered_df)
 
@@ -172,7 +182,11 @@ def run_clustering(
     )
     representatives["hover_text"] = representatives["text"].apply(wrap_text)
 
-    filters = {"sectors": list(sectors or []), "regions": list(regions or [])}
+    filters = {
+        "sectors": list(sectors or []),
+        "regions": list(regions or []),
+        "eval_year_range": eval_year_range if eval_year_range else (),
+    }
 
     return ClusterResult(
         data=filtered_df,

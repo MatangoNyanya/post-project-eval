@@ -102,7 +102,7 @@ st.set_page_config(page_title="クラスタ分析ダッシュボード", layout=
 if LOGO_PATH.exists():
     st.image(str(LOGO_PATH), width=350)
 st.title("LESMAP")
-st.caption("教訓クラスタリング分析アプリ 条件を指定してクラスタリングを実行し、代表文とLLMによる意味付けを確認できます。")
+st.caption("条件を指定してクラスタリングを実行し、代表文とLLMによる意味付けを確認できます。")
 
 
 @st.cache_data(show_spinner=False)
@@ -188,6 +188,22 @@ embeddings_master = load_embeddings(str(selected_embedding_path))
 with st.sidebar:
     st.header("クラスタリング条件")
     form = st.form("controls")
+    year_series = pd.to_numeric(df_master.get("eval_year"), errors="coerce")
+    valid_years = year_series.dropna()
+    if valid_years.empty:
+        eval_year_min = 0
+        eval_year_max = 0
+    else:
+        eval_year_min = int(valid_years.min())
+        eval_year_max = int(valid_years.max())
+    selected_eval_years = form.slider(
+        "評価年",
+        min_value=eval_year_min,
+        max_value=eval_year_max,
+        value=(eval_year_min, eval_year_max),
+        step=1,
+    )
+
     cluster_slider_cfg = UI_CONFIG.get("cluster_slider", {})
     cluster_min = cluster_slider_cfg.get("min", 2)
     cluster_step = cluster_slider_cfg.get("step", 1)
@@ -234,6 +250,7 @@ if submitted:
                 cfg,
                 sectors=selected_sectors,
                 regions=selected_regions,
+                eval_year_range=selected_eval_years,
             )
         except ValueError as exc:
             st.error(str(exc))
