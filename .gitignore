@@ -6,3 +6,4 @@ tmp/
 .streamlit/
 secrets.toml
 app/__pycache__/
+.env
