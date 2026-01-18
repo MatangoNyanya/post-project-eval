@@ -172,11 +172,29 @@ def train_and_evaluate_model(train_df, valid_df, n_splits=5, threshold_objective
     )
     conf_matrix_df.to_csv('results/classification/confusion_matrix_num_lgb.csv')
 
-    print("Accuracy:", accuracy_score(y_valid_encoded, y_valid_pred_encoded))
-    print("Precision:", precision_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
-    print("Recall:", recall_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
-    print("Macro F1:", f1_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
-    print("Balanced Accuracy:", balanced_accuracy_score(y_valid_encoded, y_valid_pred_encoded))
+    # ---- Metrics ----
+    acc = accuracy_score(y_valid_encoded, y_valid_pred_encoded)
+
+    # Binary metrics for the positive class (=1)
+    prec_pos = precision_score(y_valid_encoded, y_valid_pred_encoded, average='binary', pos_label=1, zero_division=0)
+    rec_pos = recall_score(y_valid_encoded, y_valid_pred_encoded, average='binary', pos_label=1, zero_division=0)
+    f1_pos = f1_score(y_valid_encoded, y_valid_pred_encoded, average='binary', pos_label=1, zero_division=0)
+
+    # Macro-averaged metrics (average over class 0 and class 1)
+    prec_macro = precision_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0)
+    rec_macro = recall_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0)
+    f1_macro = f1_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0)
+
+    bal_acc = balanced_accuracy_score(y_valid_encoded, y_valid_pred_encoded)
+
+    print("Accuracy:", acc)
+    print("Precision (pos=1):", prec_pos)
+    print("Recall (pos=1):", rec_pos)
+    print("F1 (pos=1):", f1_pos)
+    print("Precision (macro):", prec_macro)
+    print("Recall (macro):", rec_macro)
+    print("Macro F1:", f1_macro)
+    print("Balanced Accuracy:", bal_acc)
 
     final_model, feature_names = models[-1]
     final_vectorizer = vectorizers[-1]
