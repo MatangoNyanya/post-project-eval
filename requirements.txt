@@ -20,3 +20,4 @@ umap-learn
 streamlit-plotly-events
 python-dotenv
 pyyaml
+altair==4.2.2
