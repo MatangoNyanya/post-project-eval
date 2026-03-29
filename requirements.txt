@@ -21,4 +21,3 @@ streamlit-plotly-events
 python-dotenv
 pyyaml
 altair==4.2.2
-python==3.12
