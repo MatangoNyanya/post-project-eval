@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p legacy)",
+      "Bash(mv index.html css js README.md evalnavi_spec.md legacy/)",
+      "Bash(python -c \"from data import COUNTRY_REGION, SUBSECTORS, DEFAULT_LESSONS; print\\('data.py OK, countries:', len\\(COUNTRY_REGION\\)\\)\")",
+      "Bash(python -c \"from data import COUNTRY_REGION, SUBSECTORS, DEFAULT_LESSONS; print\\('data.py OK, countries:', len\\(COUNTRY_REGION\\)\\); from logic import calculate_mock_risk, generate_mock_shap, select_lesson_data; r = calculate_mock_risk\\('ラオス', '東南アジア', '運輸交通', '技術協力', 8.5, 36\\); print\\('logic.py OK, risk score:', round\\(r, 1\\)\\)\")"
+    ]
+  }
+}

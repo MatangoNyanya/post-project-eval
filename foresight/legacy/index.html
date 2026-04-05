@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EvalNavi - JICA事業評価ナレッジ活用システム</title>
+  <link rel="stylesheet" href="css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.4.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+</head>
+<body>
+
+<!-- ヘッダー -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-title-area">
+      <span class="header-compass">🧭</span>
+      <div>
+        <h1 class="header-title">EvalNavi <span class="header-dash">—</span> JICA事業評価ナレッジ活用システム</h1>
+        <p class="header-subtitle">過去2,000件の事後評価データに基づく案件スクリーニング＆教訓検索</p>
+      </div>
+    </div>
+    <div class="header-badge">
+      <span class="badge-demo">DEMO</span>
+    </div>
+  </div>
+</header>
+
+<!-- ステップインジケーター -->
+<div class="step-indicator-container">
+  <div class="step-indicator-inner">
+    <div class="step-item" id="step-item-1">
+      <div class="step-circle active" id="step-circle-1">1</div>
+      <div class="step-label" id="step-label-1">
+        <span class="step-name">案件情報入力</span>
+        <span class="step-sub">基本情報の設定</span>
+      </div>
+    </div>
+    <div class="step-line" id="step-line-1"></div>
+    <div class="step-item" id="step-item-2">
+      <div class="step-circle" id="step-circle-2">2</div>
+      <div class="step-label" id="step-label-2">
+        <span class="step-name">予測結果・リスク分析</span>
+        <span class="step-sub">AIによるスクリーニング</span>
+      </div>
+    </div>
+    <div class="step-line" id="step-line-2"></div>
+    <div class="step-item" id="step-item-3">
+      <div class="step-circle" id="step-circle-3">3</div>
+      <div class="step-label" id="step-label-3">
+        <span class="step-name">教訓アドバイス</span>
+        <span class="step-sub">過去の知見を活用</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- メインコンテンツ -->
+<main class="main-content">
+
+  <!-- ローディングオーバーレイ -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-box">
+      <div class="loading-spinner"></div>
+      <p class="loading-text" id="loadingText">過去の類似案件を分析中...</p>
+      <div class="loading-progress">
+        <div class="loading-progress-bar" id="loadingProgressBar"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STEP 1: 案件情報入力 -->
+  <section class="step-section" id="step1">
+    <div class="two-col-layout">
+      <!-- 左：入力フォーム -->
+      <div class="col-form">
+        <div class="card">
+          <div class="card-header">
+            <h2 class="card-title"><span class="icon-label">📋</span> 案件基本情報の入力</h2>
+            <p class="card-desc">スクリーニングを行う新規案件の基本情報を入力してください</p>
+          </div>
+
+          <div class="form-grid">
+            <!-- 国名 -->
+            <div class="form-group">
+              <label class="form-label required">🌍 対象国</label>
+              <select class="form-select" id="countrySelect">
+                <optgroup label="東南アジア">
+                  <option value="ラオス" selected>ラオス</option>
+                  <option value="カンボジア">カンボジア</option>
+                  <option value="ベトナム">ベトナム</option>
+                  <option value="ミャンマー">ミャンマー</option>
+                  <option value="フィリピン">フィリピン</option>
+                  <option value="インドネシア">インドネシア</option>
+                </optgroup>
+                <optgroup label="南アジア">
+                  <option value="バングラデシュ">バングラデシュ</option>
+                  <option value="インド">インド</option>
+                  <option value="スリランカ">スリランカ</option>
+                  <option value="ネパール">ネパール</option>
+                </optgroup>
+                <optgroup label="サブサハラアフリカ">
+                  <option value="タンザニア">タンザニア</option>
+                  <option value="ケニア">ケニア</option>
+                  <option value="エチオピア">エチオピア</option>
+                  <option value="モザンビーク">モザンビーク</option>
+                  <option value="ガーナ">ガーナ</option>
+                </optgroup>
+                <optgroup label="中南米">
+                  <option value="ボリビア">ボリビア</option>
+                  <option value="ペルー">ペルー</option>
+                  <option value="ホンジュラス">ホンジュラス</option>
+                </optgroup>
+                <optgroup label="中東・北アフリカ">
+                  <option value="エジプト">エジプト</option>
+                  <option value="ヨルダン">ヨルダン</option>
+                  <option value="モロッコ">モロッコ</option>
+                </optgroup>
+              </select>
+            </div>
+
+            <!-- 地域（自動） -->
+            <div class="form-group">
+              <label class="form-label">📍 地域（自動設定）</label>
+              <input type="text" class="form-input disabled" id="regionInput" value="東南アジア" readonly>
+            </div>
+
+            <!-- セクター -->
+            <div class="form-group">
+              <label class="form-label required">🏗️ セクター</label>
+              <select class="form-select" id="sectorSelect">
+                <option value="運輸交通" selected>運輸交通</option>
+                <option value="水資源・防災">水資源・防災</option>
+                <option value="保健医療">保健医療</option>
+                <option value="教育">教育</option>
+                <option value="農業・農村開発">農業・農村開発</option>
+                <option value="ガバナンス">ガバナンス</option>
+                <option value="資源・エネルギー">資源・エネルギー</option>
+                <option value="都市開発・環境">都市開発・環境</option>
+                <option value="情報通信技術">情報通信技術</option>
+              </select>
+            </div>
+
+            <!-- サブセクター -->
+            <div class="form-group">
+              <label class="form-label required">📂 サブセクター</label>
+              <select class="form-select" id="subsectorSelect">
+                <option value="道路" selected>道路</option>
+              </select>
+            </div>
+
+            <!-- スキーム -->
+            <div class="form-group form-group-full">
+              <label class="form-label required">📋 スキーム</label>
+              <div class="radio-group">
+                <label class="radio-label">
+                  <input type="radio" name="scheme" value="技術協力" checked>
+                  <span class="radio-custom"></span>
+                  技術協力
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="scheme" value="有償資金協力">
+                  <span class="radio-custom"></span>
+                  有償資金協力
+                </label>
+                <label class="radio-label">
+                  <input type="radio" name="scheme" value="無償資金協力">
+                  <span class="radio-custom"></span>
+                  無償資金協力
+                </label>
+              </div>
+            </div>
+
+            <!-- 計画事業費 -->
+            <div class="form-group">
+              <label class="form-label required">💰 計画事業費（億円）</label>
+              <div class="number-input-wrapper">
+                <input type="number" class="form-input" id="budgetInput" value="8.5" min="0.1" max="5000" step="0.5">
+                <span class="input-unit">億円</span>
+              </div>
+            </div>
+
+            <!-- 計画事業期間 -->
+            <div class="form-group">
+              <label class="form-label required">⏱️ 計画事業期間（ヶ月）</label>
+              <div class="slider-wrapper">
+                <input type="range" class="form-slider" id="durationSlider" min="6" max="120" value="48" step="6">
+                <div class="slider-value-display">
+                  <span id="durationValue">48</span>ヶ月
+                  <span class="slider-hint" id="durationHint">（4年）</span>
+                </div>
+              </div>
+              <div class="slider-labels">
+                <span>6ヶ月</span>
+                <span>120ヶ月</span>
+              </div>
+            </div>
+
+            <!-- 事業概要 -->
+            <div class="form-group form-group-full">
+              <label class="form-label">📝 事業概要（任意）</label>
+              <textarea class="form-textarea" id="overviewText" rows="4" placeholder="事業の目的や主な活動内容を簡潔に記述してください...">地方道路の維持管理能力強化を目的とし、県公共事業運輸局の技術者に対する研修体制の構築と、モデル区間での実地訓練を実施する。併せて、道路維持管理計画の策定を支援する。</textarea>
+            </div>
+          </div>
+
+          <button class="btn-primary btn-large" id="runScreeningBtn">
+            <span>🔍</span> スクリーニングを実行する
+          </button>
+        </div>
+      </div>
+
+      <!-- 右：説明パネル -->
+      <div class="col-info">
+        <div class="card info-card">
+          <h3 class="info-title">💡 EvalNaviの仕組み</h3>
+          <p class="info-body">このツールは、JICAの<strong>過去2,000件の事後評価報告書</strong>（2010〜2025年度）を機械学習とテキストマイニングで分析した結果に基づいています。</p>
+
+          <div class="step-flow">
+            <div class="flow-item">
+              <div class="flow-num">STEP 1</div>
+              <div class="flow-desc"><strong>📋 案件の基本情報を入力</strong></div>
+            </div>
+            <div class="flow-arrow">▼</div>
+            <div class="flow-item">
+              <div class="flow-num">STEP 2</div>
+              <div class="flow-desc"><strong>📊 AIが類似案件の評価パターンを分析し、リスク度を予測</strong></div>
+            </div>
+            <div class="flow-arrow">▼</div>
+            <div class="flow-item">
+              <div class="flow-num">STEP 3</div>
+              <div class="flow-desc"><strong>📖 リスク要因に対応する過去の教訓と具体的対策を提示</strong></div>
+            </div>
+          </div>
+
+          <hr class="info-divider">
+
+          <div class="info-stats">
+            <h4 class="info-stats-title">📊 分析基盤</h4>
+            <table class="stats-table">
+              <tr><td>対象報告書</td><td><strong>2,047件</strong></td></tr>
+              <tr><td>対象期間</td><td><strong>2010〜2025年度</strong></td></tr>
+              <tr><td>対象国</td><td><strong>約100ヵ国</strong></td></tr>
+              <tr><td>教訓・提言</td><td><strong>約8,500件</strong></td></tr>
+            </table>
+          </div>
+
+          <div class="info-tech">
+            <h4 class="info-stats-title">🤖 使用技術</h4>
+            <div class="tech-tags">
+              <span class="tech-tag">LightGBM</span>
+              <span class="tech-tag">SHAP</span>
+              <span class="tech-tag">RAG</span>
+              <span class="tech-tag">Azure OpenAI GPT-4o</span>
+              <span class="tech-tag">multilingual-E5-large</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 免責カード -->
+        <div class="card disclaimer-card">
+          <p class="disclaimer-text">⚠️ <strong>デモ版注記：</strong> 本ツールはプロトタイプです。予測はルールベースのダミーロジックで動作しており、実際のMLモデルによる出力ではありません。</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- STEP 2: 予測結果 + SHAP分析 -->
+  <section class="step-section hidden" id="step2">
+    <div class="step-section-header">
+      <h2 class="section-title">📊 スクリーニング結果</h2>
+      <div class="input-summary" id="inputSummaryBadges"></div>
+    </div>
+
+    <div class="two-col-layout">
+      <!-- 左：予測結果 -->
+      <div class="col-prediction">
+        <div class="card">
+          <h3 class="card-title-sm">📊 総合評価予測</h3>
+          <div id="gaugeChart" style="height: 280px;"></div>
+          <div class="gauge-verdict" id="gaugeVerdict"></div>
+          <p class="gauge-note">※ 過去の類似条件（国・セクター・スキーム）の案件 <span id="similarCount">10</span>件の評価結果パターンに基づく予測です。本予測はあくまで参考情報であり、案件の個別事情は考慮されていません。</p>
+        </div>
+
+        <!-- 評価項目別予測 -->
+        <div class="sub-ratings-container" id="subRatingsContainer">
+          <!-- JS で動的生成 -->
+        </div>
+      </div>
+
+      <!-- 右：SHAP分析 -->
+      <div class="col-shap">
+        <div class="card">
+          <h3 class="card-title-sm">🔍 リスク要因分析（SHAP）</h3>
+          <div id="shapChart" style="height: 300px;"></div>
+          <div class="shap-explanations" id="shapExplanations"></div>
+          <div class="shap-info-box">
+            <p><strong>💡 SHAP値について</strong></p>
+            <p>各要因が予測にどれだけ影響しているかを示します。正の値（→）はリスクを押し上げ、負の値（←）はリスクを低減する要因です。値が大きいほど影響が強いことを意味します。</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 類似案件テーブル -->
+    <div class="card mt-16">
+      <div class="table-header">
+        <h3 class="card-title-sm">📋 参考：類似条件の過去案件（直近10件）</h3>
+        <div class="table-stats" id="tableSummaryStats"></div>
+      </div>
+      <div class="table-wrapper">
+        <table class="data-table" id="similarProjectsTable">
+          <thead>
+            <tr>
+              <th>事業名</th>
+              <th>評価年</th>
+              <th>セクター</th>
+              <th>総合評価</th>
+              <th>効率性</th>
+              <th>持続性</th>
+            </tr>
+          </thead>
+          <tbody id="similarProjectsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <button class="btn-primary btn-large mt-24" id="goToLessonsBtn">
+      📖 リスク要因に対応する教訓・対策を確認する →
+    </button>
+  </section>
+
+  <!-- STEP 3: 教訓アドバイス -->
+  <section class="step-section hidden" id="step3">
+    <div class="step-section-header">
+      <h2 class="section-title">📖 リスク要因別 教訓アドバイス</h2>
+      <p class="section-desc">入力された案件条件に関連する過去の評価報告書から、類似の課題を持つ案件の教訓と成功パターンを提示します。</p>
+    </div>
+
+    <!-- 教訓パネル群 -->
+    <div id="lessonPanels"></div>
+
+    <!-- 総合サマリー -->
+    <div class="card summary-card" id="summaryCard">
+      <div class="summary-header" id="summaryHeader"></div>
+      <div class="summary-points" id="summaryPoints"></div>
+    </div>
+
+    <!-- アクションボタン -->
+    <div class="action-buttons-row">
+      <button class="btn-outline btn-disabled" disabled title="本番版で実装予定">
+        📄 レポートをPDF出力
+        <span class="btn-badge">本番版</span>
+      </button>
+      <button class="btn-outline btn-disabled" disabled title="本番版で実装予定">
+        📊 類似事業の詳細一覧
+        <span class="btn-badge">本番版</span>
+      </button>
+      <button class="btn-secondary" id="resetBtn">
+        🔄 条件を変えて再分析
+      </button>
+    </div>
+  </section>
+
+</main>
+
+<!-- サイドバー（右側ドロワー） -->
+<div class="sidebar-toggle" id="sidebarToggle" title="システム情報">
+  <i class="fas fa-info-circle"></i>
+</div>
+<div class="sidebar-overlay" id="sidebarOverlay"></div>
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-close" id="sidebarClose">✕</div>
+  <h3 class="sidebar-title">🧭 EvalNavi</h3>
+  <hr class="sidebar-divider">
+  <div class="sidebar-section">
+    <h4>📊 分析基盤情報</h4>
+    <ul class="sidebar-list">
+      <li>対象報告書: <strong>2,047件</strong></li>
+      <li>対象期間: <strong>2010〜2025年度</strong></li>
+      <li>最終データ更新: <strong>2025年3月</strong></li>
+      <li>予測モデル精度: <strong>AUC 0.78</strong></li>
+    </ul>
+  </div>
+  <hr class="sidebar-divider">
+  <div class="sidebar-section">
+    <h4>⚙️ モデル情報</h4>
+    <ul class="sidebar-list">
+      <li>予測モデル: <strong>LightGBM v4.1</strong></li>
+      <li>Embedding: <strong>multilingual-E5-large</strong></li>
+      <li>生成AI: <strong>Azure OpenAI GPT-4o</strong></li>
+      <li>SHAP: <strong>TreeExplainer</strong></li>
+    </ul>
+  </div>
+  <hr class="sidebar-divider">
+  <div class="sidebar-section">
+    <div class="sidebar-disclaimer">
+      <strong>⚠️ 免責事項</strong><br>
+      本ツールの予測・教訓提示はあくまで参考情報です。案件形成における最終判断は、担当者の専門的知見に基づいて行ってください。
+    </div>
+  </div>
+  <hr class="sidebar-divider">
+  <div class="sidebar-section sidebar-footer">
+    <p>🏛️ 開発: JICA評価情報センター（仮）</p>
+    <p>📧 連絡先: demo@example.com</p>
+  </div>
+</aside>
+
+<script src="js/data.js"></script>
+<script src="js/logic.js"></script>
+<script src="js/charts.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
