@@ -297,7 +297,7 @@ div[data-testid="stSelectbox"] > label {
 /* ── Form submit button ── */
 div[data-testid="stFormSubmitButton"] > button {
     background: #0f172a !important;
-    color: white !important;
+    color: #ffffff !important;
     border: none !important;
     border-radius: 8px !important;
     font-weight: 600 !important;
@@ -311,6 +311,10 @@ div[data-testid="stFormSubmitButton"] > button:hover {
     background: #1e293b !important;
     transform: translateY(-1px) !important;
     box-shadow: 0 6px 8px -1px rgba(0,0,0,0.15) !important;
+}
+div[data-testid="stFormSubmitButton"] > button p,
+div[data-testid="stFormSubmitButton"] > button span {
+    color: #ffffff !important;
 }
 
 /* ── Sidebar form labels ── */
