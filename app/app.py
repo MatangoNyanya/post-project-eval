@@ -453,29 +453,21 @@ def _parse_llm_output(text: str) -> dict[str, str]:
 
 def _render_llm_card(label_text: str) -> None:
     parsed = _parse_llm_output(label_text)
-    if parsed["title"]:
-        title_html = f'<div class="llm-title">💡 {parsed["title"]}</div>'
-        desc_html = ""
+    with st.container():
+        st.markdown('<div class="llm-card-top"></div>', unsafe_allow_html=True)
+        if parsed["title"]:
+            st.markdown(f'<p class="llm-title">💡 {parsed["title"]}</p>', unsafe_allow_html=True)
         if parsed["description"]:
-            desc_html = f'''
-                <div class="llm-section-label">📋 説明</div>
-                <div class="llm-body">{parsed["description"]}</div>
-            '''
-        act_html = ""
+            st.markdown('<p class="llm-section-label">📋 説明</p>', unsafe_allow_html=True)
+            st.markdown(parsed["description"])
         if parsed["action"]:
-            act_html = f'''
-                <div class="llm-section-label">🔧 対策</div>
-                <div class="llm-action-box">{parsed["action"]}</div>
-            '''
-        st.markdown(
-            f'<div class="llm-card">{title_html}{desc_html}{act_html}</div>',
-            unsafe_allow_html=True,
-        )
-    else:
-        st.markdown(
-            f'<div class="llm-card"><div class="llm-body">{label_text}</div></div>',
-            unsafe_allow_html=True,
-        )
+            st.markdown('<p class="llm-section-label">🔧 対策</p>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="llm-action-box">{parsed["action"]}</div>',
+                unsafe_allow_html=True,
+            )
+        if not parsed["title"] and not parsed["description"] and not parsed["action"]:
+            st.markdown(label_text)
 
 
 def _render_stats_section(stats: pd.DataFrame) -> None:
