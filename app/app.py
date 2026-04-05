@@ -186,36 +186,30 @@ CUSTOM_CSS = """
 .badge-low  { color: #34d399; font-weight: 700; }
 
 /* ── LLM result card ── */
-.llm-card {
+.llm-card-top {
+    display: none;
+}
+[data-testid="stVerticalBlock"]:has(.llm-card-top) {
     background: linear-gradient(135deg, #1a2744 0%, #1a1f35 100%);
     border: 1px solid #2d3a5e;
     border-radius: 14px;
-    padding: 24px 28px;
+    padding: 20px 24px;
     margin-top: 16px;
     box-shadow: 0 4px 24px rgba(0,0,0,0.3);
 }
-.llm-title {
+p.llm-title {
     font-size: 1.35rem;
     font-weight: 700;
     color: #a78bfa;
     margin: 0 0 16px 0;
-    display: flex;
-    align-items: center;
-    gap: 10px;
 }
-.llm-section-label {
+p.llm-section-label {
     font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
     color: #60a5fa;
-    margin-bottom: 6px;
-}
-.llm-body {
-    font-size: 0.92rem;
-    line-height: 1.75;
-    color: #cbd5e1;
-    margin-bottom: 18px;
+    margin-bottom: 4px;
 }
 .llm-action-box {
     background: #0f2818;
@@ -426,31 +420,21 @@ def _parse_llm_output(text: str) -> dict[str, str]:
 
 def _render_llm_card(label_text: str) -> None:
     parsed = _parse_llm_output(label_text)
-    if parsed["title"]:
-        title_html = f'<div class="llm-title">💡 {parsed["title"]}</div>'
-        desc_html = ""
+    with st.container():
+        st.markdown('<div class="llm-card-top"></div>', unsafe_allow_html=True)
+        if parsed["title"]:
+            st.markdown(f'<p class="llm-title">💡 {parsed["title"]}</p>', unsafe_allow_html=True)
         if parsed["description"]:
-            desc_body = parsed["description"].replace("\n", "<br>")
-            desc_html = f'''
-                <div class="llm-section-label">📋 説明</div>
-                <div class="llm-body">{desc_body}</div>
-            '''
-        act_html = ""
+            st.markdown('<p class="llm-section-label">📋 説明</p>', unsafe_allow_html=True)
+            st.markdown(parsed["description"])
         if parsed["action"]:
-            act_body = parsed["action"].replace("\n", "<br>")
-            act_html = f'''
-                <div class="llm-section-label">🔧 対策</div>
-                <div class="llm-action-box">{act_body}</div>
-            '''
-        st.markdown(
-            f'<div class="llm-card">{title_html}{desc_html}{act_html}</div>',
-            unsafe_allow_html=True,
-        )
-    else:
-        st.markdown(
-            f'<div class="llm-card"><div class="llm-body">{label_text}</div></div>',
-            unsafe_allow_html=True,
-        )
+            st.markdown('<p class="llm-section-label">🔧 対策</p>', unsafe_allow_html=True)
+            st.markdown(
+                f'<div class="llm-action-box">{parsed["action"]}</div>',
+                unsafe_allow_html=True,
+            )
+        if not parsed["title"] and not parsed["description"] and not parsed["action"]:
+            st.markdown(label_text)
 
 
 def _render_stats_section(stats: pd.DataFrame) -> None:
