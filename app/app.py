@@ -65,245 +65,282 @@ DEFAULT_CONFIG = {
     },
 }
 
-CUSTOM_CSS = """
+CUSTOM_CSS = '''
 <style>
-/* ── Base ── */
+/* ── Base Modern ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+html, body, [class*="css"]  {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+}
 [data-testid="stAppViewContainer"] {
-    background: #0f1117;
-    color: #e2e8f0;
+    background: #f8fafc;
+    color: #0f172a;
 }
 [data-testid="stSidebar"] {
-    background: #1a1d27;
-    border-right: 1px solid #2d3148;
+    background: #ffffff;
+    border-right: 1px solid #e2e8f0;
 }
 [data-testid="stSidebar"] * {
-    color: #c8cfe0 !important;
+    color: #334155 !important;
 }
 
 /* ── Hero header ── */
 .hero-header {
-    background: linear-gradient(135deg, #1e3a5f 0%, #2d1b69 50%, #1a3a2e 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
     border-radius: 16px;
-    padding: 28px 36px;
-    margin-bottom: 24px;
-    border: 1px solid rgba(255,255,255,0.08);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    padding: 32px 40px;
+    margin-bottom: 32px;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03);
 }
 .hero-title {
-    font-size: 2.4rem;
+    font-size: 2.8rem;
     font-weight: 800;
-    background: linear-gradient(90deg, #60a5fa, #a78bfa, #34d399);
+    background: linear-gradient(90deg, #2563eb, #7c3aed, #059669);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    margin: 0 0 6px 0;
+    margin: 0 0 8px 0;
     line-height: 1.2;
+    letter-spacing: -0.02em;
 }
 .hero-subtitle {
-    font-size: 0.95rem;
-    color: #94a3b8;
+    font-size: 1.05rem;
+    color: #64748b;
     margin: 0;
+    font-weight: 400;
 }
 
 /* ── Section header ── */
 .section-header {
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     font-weight: 700;
-    color: #60a5fa;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    margin: 28px 0 14px 0;
-    padding-bottom: 8px;
-    border-bottom: 2px solid #1e3a5f;
+    color: #1e293b;
+    margin: 36px 0 16px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e2e8f0;
     display: flex;
     align-items: center;
     gap: 8px;
+    letter-spacing: -0.01em;
 }
 
 /* ── Metric cards ── */
 .metric-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-    gap: 12px;
-    margin-bottom: 20px;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 24px;
 }
 .metric-card {
-    background: #1e2130;
-    border: 1px solid #2d3148;
-    border-radius: 12px;
-    padding: 16px 18px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 20px 24px;
     text-align: center;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
 }
 .metric-card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-    border-color: #60a5fa;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08), 0 4px 6px -2px rgba(0,0,0,0.04);
+    border-color: #cbd5e1;
 }
 .metric-card .label {
-    font-size: 0.72rem;
+    font-size: 0.75rem;
     color: #64748b;
     text-transform: uppercase;
-    letter-spacing: 0.06em;
-    margin-bottom: 6px;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+    margin-bottom: 8px;
 }
 .metric-card .value {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     font-weight: 700;
-    color: #e2e8f0;
+    color: #0f172a;
+    letter-spacing: -0.02em;
 }
 .metric-card .sub {
-    font-size: 0.78rem;
+    font-size: 0.8rem;
     color: #94a3b8;
-    margin-top: 3px;
+    margin-top: 4px;
 }
 
 /* ── Stats table ── */
 .stats-table {
     width: 100%;
     border-collapse: collapse;
-    font-size: 0.875rem;
-    margin-bottom: 20px;
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    background: #ffffff;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px 0 rgba(0,0,0,0.05);
 }
 .stats-table th {
-    background: #1e2130;
-    color: #60a5fa;
-    padding: 10px 14px;
+    background: #f8fafc;
+    color: #475569;
+    padding: 12px 16px;
     text-align: left;
     font-weight: 600;
-    border-bottom: 2px solid #2d3148;
+    border-bottom: 1px solid #e2e8f0;
 }
 .stats-table td {
-    padding: 9px 14px;
-    border-bottom: 1px solid #1e2130;
-    color: #cbd5e1;
+    padding: 12px 16px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
 }
 .stats-table tr:hover td {
-    background: #1e2130;
+    background: #f8fafc;
 }
-.badge-high { color: #f87171; font-weight: 700; }
-.badge-mid  { color: #fb923c; font-weight: 700; }
-.badge-low  { color: #34d399; font-weight: 700; }
 
 /* ── LLM result card ── */
-.llm-card-top {
-    display: none;
+.llm-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 28px 32px;
+    margin-top: 20px;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
-[data-testid="stVerticalBlock"]:has(.llm-card-top) {
-    background: linear-gradient(135deg, #1a2744 0%, #1a1f35 100%);
-    border: 1px solid #2d3a5e;
-    border-radius: 14px;
-    padding: 20px 24px;
-    margin-top: 16px;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.3);
-}
-p.llm-title {
-    font-size: 1.35rem;
+.llm-title {
+    font-size: 1.4rem;
     font-weight: 700;
-    color: #a78bfa;
-    margin: 0 0 16px 0;
+    color: #7c3aed;
+    margin: 0 0 20px 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    letter-spacing: -0.01em;
 }
-p.llm-section-label {
-    font-size: 0.72rem;
+.llm-section-label {
+    font-size: 0.75rem;
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.1em;
-    color: #60a5fa;
-    margin-bottom: 4px;
+    color: #64748b;
+    margin-bottom: 8px;
+}
+.llm-body {
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #334155;
+    margin-bottom: 20px;
 }
 .llm-action-box {
-    background: #0f2818;
-    border-left: 4px solid #34d399;
+    background: #ecfdf5;
+    border-left: 4px solid #10b981;
     border-radius: 0 8px 8px 0;
-    padding: 14px 18px;
-    font-size: 0.92rem;
-    line-height: 1.75;
-    color: #86efac;
+    padding: 16px 20px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #065f46;
 }
 
 /* ── Representative sentences ── */
 .rep-card {
-    background: #1a1d27;
-    border: 1px solid #2d3148;
-    border-radius: 10px;
-    padding: 14px 18px;
-    margin-bottom: 10px;
-    font-size: 0.88rem;
-    line-height: 1.7;
-    color: #cbd5e1;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 18px 22px;
+    margin-bottom: 12px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    color: #334155;
     position: relative;
+    box-shadow: 0 1px 2px 0 rgba(0,0,0,0.03);
+    transition: all 0.2s ease;
 }
 .rep-card:hover {
-    border-color: #a78bfa;
-    background: #1e2130;
+    border-color: #cbd5e1;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
 }
 .rep-rank {
     display: inline-block;
-    background: #2d1b69;
-    color: #a78bfa;
-    font-size: 0.7rem;
-    font-weight: 700;
-    padding: 2px 8px;
+    background: #f1f5f9;
+    color: #475569;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 4px 10px;
     border-radius: 20px;
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 .rep-meta {
-    font-size: 0.72rem;
-    color: #475569;
-    margin-top: 8px;
+    font-size: 0.8rem;
+    color: #94a3b8;
+    margin-top: 12px;
+    font-weight: 500;
 }
 
 /* ── Info banner ── */
 .info-banner {
-    background: #1e2130;
-    border: 1px solid #2d3148;
-    border-radius: 12px;
-    padding: 40px;
+    background: #eff6ff;
+    border: 1px solid #bfdbfe;
+    border-radius: 16px;
+    padding: 48px;
     text-align: center;
-    color: #64748b;
-    font-size: 1rem;
-    margin-top: 16px;
+    color: #1e3a8a;
+    font-size: 1.1rem;
+    margin-top: 24px;
+    font-weight: 500;
 }
-.info-banner .icon { font-size: 2.5rem; margin-bottom: 12px; }
+.info-banner .icon { font-size: 3rem; margin-bottom: 16px; }
 
 /* ── Cluster selector ── */
 div[data-testid="stSelectbox"] > label {
-    color: #94a3b8 !important;
-    font-size: 0.85rem !important;
+    color: #475569 !important;
+    font-size: 0.9rem !important;
+    font-weight: 600 !important;
 }
 
 /* ── Form submit button ── */
 div[data-testid="stFormSubmitButton"] > button {
-    background: linear-gradient(90deg, #3b82f6, #8b5cf6) !important;
-    color: white !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
     border: none !important;
-    border-radius: 10px !important;
-    font-weight: 700 !important;
-    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+    font-weight: 600 !important;
+    font-size: 1rem !important;
     padding: 12px !important;
     width: 100% !important;
-    transition: opacity 0.15s ease !important;
+    transition: all 0.2s ease !important;
+    box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
 }
 div[data-testid="stFormSubmitButton"] > button:hover {
-    opacity: 0.88 !important;
+    background: #1e293b !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 6px 8px -1px rgba(0,0,0,0.15) !important;
+}
+div[data-testid="stFormSubmitButton"] > button p,
+div[data-testid="stFormSubmitButton"] > button span {
+    color: #ffffff !important;
 }
 
 /* ── Sidebar form labels ── */
 [data-testid="stSidebar"] label {
-    font-size: 0.82rem !important;
+    font-size: 0.85rem !important;
     font-weight: 600 !important;
-    color: #94a3b8 !important;
+    color: #475569 !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.06em !important;
+    letter-spacing: 0.04em !important;
+}
+
+/* ── Expander ── */
+.streamlit-expanderHeader {
+    font-weight: 600;
+    color: #334155;
+    background: #f8fafc;
+    border-radius: 8px;
 }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: #0f1117; }
-::-webkit-scrollbar-thumb { background: #2d3148; border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: #4a5080; }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #f1f5f9; }
+::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 </style>
-"""
+'''
 
 
 def _deep_update(base: dict, update: dict) -> dict:
@@ -381,23 +418,23 @@ def _build_scatter_figure(df: pd.DataFrame, plot_cfg: dict) -> go.Figure:
         margin=plot_cfg.get("margin", dict(l=10, r=10, t=40, b=40)),
         xaxis_title="UMAP-1",
         yaxis_title="UMAP-2",
-        paper_bgcolor="#0f1117",
-        plot_bgcolor="#13161f",
-        font=dict(color="#94a3b8", size=12),
+        paper_bgcolor="#ffffff",
+        plot_bgcolor="#f8fafc",
+        font=dict(color="#475569", size=12, family="Inter, sans-serif"),
         xaxis=dict(
-            gridcolor="#1e2130",
-            zerolinecolor="#2d3148",
+            gridcolor="#e2e8f0",
+            zerolinecolor="#cbd5e1",
             tickfont=dict(color="#64748b"),
         ),
         yaxis=dict(
-            gridcolor="#1e2130",
-            zerolinecolor="#2d3148",
+            gridcolor="#e2e8f0",
+            zerolinecolor="#cbd5e1",
             tickfont=dict(color="#64748b"),
         ),
         hoverlabel=dict(
-            bgcolor="#1e2130",
-            bordercolor="#2d3148",
-            font_color="#e2e8f0",
+            bgcolor="#ffffff",
+            bordercolor="#e2e8f0",
+            font_color="#0f172a",
         ),
     )
     return fig
