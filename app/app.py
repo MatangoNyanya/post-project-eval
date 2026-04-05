@@ -430,15 +430,17 @@ def _render_llm_card(label_text: str) -> None:
         title_html = f'<div class="llm-title">💡 {parsed["title"]}</div>'
         desc_html = ""
         if parsed["description"]:
+            desc_body = parsed["description"].replace("\n", "<br>")
             desc_html = f'''
                 <div class="llm-section-label">📋 説明</div>
-                <div class="llm-body">{parsed["description"]}</div>
+                <div class="llm-body">{desc_body}</div>
             '''
         act_html = ""
         if parsed["action"]:
+            act_body = parsed["action"].replace("\n", "<br>")
             act_html = f'''
                 <div class="llm-section-label">🔧 対策</div>
-                <div class="llm-action-box">{parsed["action"]}</div>
+                <div class="llm-action-box">{act_body}</div>
             '''
         st.markdown(
             f'<div class="llm-card">{title_html}{desc_html}{act_html}</div>',
