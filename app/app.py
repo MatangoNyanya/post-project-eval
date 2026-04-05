@@ -111,6 +111,13 @@ html, body, [class*="css"]  {
     margin: 0;
     font-weight: 400;
 }
+.hero-desc {
+    font-size: 0.95rem;
+    color: #64748b;
+    line-height: 1.75;
+    margin: -16px 0 24px 0;
+    padding: 0 4px;
+}
 
 /* ── Section header ── */
 .section-header {
@@ -582,26 +589,22 @@ def _render_representatives(result: ClusterResult, cluster_id: int, llm_cfg: dic
 
 
 # ── Header ──────────────────────────────────────────────────────────────────
+_desc1 = "事後評価の「教訓」に記載された言葉をクラスタリングで分類するツールです。"
+_desc2 = "分野・地域・評価年などの条件を指定して実行すると、各クラスタの代表文をもとに LLM が共通テーマ・対策を推論します。"
+
+_hero_inner = (
+    '<div class="hero-title">LESMAP</div>'
+    f'<div class="hero-subtitle">{_desc1}<br>{_desc2}</div>'
+)
+
 if LOGO_PATH.exists():
     col_logo, col_title = st.columns([1, 5])
     with col_logo:
         st.image(str(LOGO_PATH), width=120)
     with col_title:
-        st.markdown(
-            """<div class="hero-header" style="margin-top:0">
-                <div class="hero-title">LESMAP</div>
-                <div class="hero-subtitle">条件を指定してクラスタリングを実行し、代表文と LLM による意味付けを確認できます。</div>
-            </div>""",
-            unsafe_allow_html=True,
-        )
+        st.markdown(f'<div class="hero-header" style="margin-top:0">{_hero_inner}</div>', unsafe_allow_html=True)
 else:
-    st.markdown(
-        """<div class="hero-header">
-            <div class="hero-title">LESMAP</div>
-            <div class="hero-subtitle">条件を指定してクラスタリングを実行し、代表文と LLM による意味付けを確認できます。</div>
-        </div>""",
-        unsafe_allow_html=True,
-    )
+    st.markdown(f'<div class="hero-header">{_hero_inner}</div>', unsafe_allow_html=True)
 
 # ── Sidebar ──────────────────────────────────────────────────────────────────
 dset_keys = list(DATASET_CONFIGS.keys())
