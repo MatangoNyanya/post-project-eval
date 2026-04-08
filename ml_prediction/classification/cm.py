@@ -10,10 +10,26 @@ def vis(confusion_matrix_path, results_path):
     
     # ヒートマップの描画
     plt.figure(figsize=(10, 8))
-    sns.heatmap(confusion_matrix_df, annot=True, fmt='d', cmap='Blues', cbar=True, square=True)
-    plt.xlabel('Predicted Labels')
-    plt.ylabel('True Labels')
-    plt.title('Confusion Matrix')
+    ax = sns.heatmap(
+        confusion_matrix_df,
+        annot=True,
+        fmt='d',
+        cmap='Blues',
+        cbar=True,
+        square=True,
+        annot_kws={"size": 18},
+    )
+
+    # Enlarge tick labels
+    ax.set_xticklabels(ax.get_xticklabels(), fontsize=14, rotation=0)
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=14, rotation=0)
+
+    # Enlarge axis labels and title
+    plt.xlabel('Predicted Labels', fontsize=16)
+    plt.ylabel('True Labels', fontsize=16)
+    plt.title('Confusion Matrix', fontsize=18)
+
+    plt.tight_layout()
     plt.show()
     
     # 予測結果の読み込み

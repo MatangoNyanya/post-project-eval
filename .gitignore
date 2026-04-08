@@ -7,3 +7,4 @@ tmp/
 secrets.toml
 app/__pycache__/
 .env
+ml_prediction/classification/__pycache__/

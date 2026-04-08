@@ -15,34 +15,76 @@ from sklearn.metrics import (
 )
 import shap
 import matplotlib.pyplot as plt
+import os
 
 
-def find_best_threshold(y_true, proba, objective="balanced_accuracy"):
+def find_best_threshold(y_true, proba, objective="balanced_accuracy", pos_label=1, beta=1.0):
+    """Find an optimal probability threshold.
+
+    Parameters
+    ----------
+    y_true : array-like of shape (n_samples,)
+        True binary labels (0/1).
+    proba : array-like of shape (n_samples,)
+        Predicted probabilities for class 1.
+    objective : str
+        One of:
+        - "f1_pos": F1 for the positive class (pos_label)
+        - "fbeta_pos": F-beta for the positive class (pos_label)
+        - "macro_f1": Macro-averaged F1 over classes 0 and 1
+        - "balanced_accuracy": Balanced accuracy
+    pos_label : int
+        Which label is treated as the positive class (default=1).
+    beta : float
+        Beta for F-beta (only used when objective="fbeta_pos").
+    """
     grid = np.unique(
         np.concatenate(
             [
                 np.linspace(0.01, 0.99, 199),
-                proba,
+                np.asarray(proba, dtype=float),
             ]
         )
     )
+
     best_t, best_score = 0.5, -1.0
     for t in grid:
         pred = (proba >= t).astype(int)
-        if objective == "macro_f1":
-            score = f1_score(y_true, pred, average='macro', zero_division=0)
+
+        if objective == "f1_pos":
+            score = f1_score(y_true, pred, average="binary", pos_label=pos_label, zero_division=0)
+        elif objective == "fbeta_pos":
+            from sklearn.metrics import fbeta_score
+            score = fbeta_score(y_true, pred, beta=beta, pos_label=pos_label, zero_division=0)
+        elif objective == "macro_f1":
+            score = f1_score(y_true, pred, average="macro", zero_division=0)
         elif objective == "balanced_accuracy":
             score = balanced_accuracy_score(y_true, pred)
         else:
-            raise ValueError("objective must be 'macro_f1' or 'balanced_accuracy'")
+            raise ValueError(
+                "objective must be one of 'f1_pos', 'fbeta_pos', 'macro_f1', or 'balanced_accuracy'"
+            )
+
         if score > best_score:
             best_score, best_t = score, t
+
     return float(best_t), float(best_score)
 
 
-def train_and_evaluate_model(train_df, valid_df, n_splits=5, threshold_objective="balanced_accuracy"):
+def train_and_evaluate_model(
+    train_df,
+    valid_df,
+    n_splits=5,
+    threshold_objective="balanced_accuracy",
+    create_shap_dependence=False,
+    dependence_features=None,
+    max_dependence=5,
+    save_shap_plots=True,
+    shap_plot_dir="results/classification",
+):
     train_df = train_df.copy()
     valid_df = valid_df.copy()
+
 
     if train_df['label'].isna().any() or valid_df['label'].isna().any():
         raise ValueError("label 列に欠損値が含まれています。欠損を除去または補完してください。")
@@ -51,6 +93,9 @@ def train_and_evaluate_model(train_df, valid_df, n_splits=5, threshold_objective
     y_train = train_df['label']
     X_valid = valid_df.drop(columns=['label'])
     y_valid = valid_df['label']
+
+    neg, pos = np.bincount(y_train)  # XGBoost 用の scale_pos_weight
+    scale_pos_weight = neg / pos
 
     if 'sentence' not in X_train.columns:
         raise ValueError("'sentence' 列がデータに含まれていません。")
@@ -84,7 +129,8 @@ def train_and_evaluate_model(train_df, valid_df, n_splits=5, threshold_objective
         reg_lambda=0.0,
         random_state=42,
         n_jobs=-1,
-        is_unbalance=True,
+        #is_unbalance=True,
+        scale_pos_weight=scale_pos_weight
     )
 
     kf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=42)
@@ -172,12 +218,35 @@ def train_and_evaluate_model(train_df, valid_df, n_splits=5, threshold_objective
     )
     conf_matrix_df.to_csv('results/classification/confusion_matrix_num_lgb.csv')
 
-    print("Accuracy:", accuracy_score(y_valid_encoded, y_valid_pred_encoded))
-    print("Precision:", precision_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
-    print("Recall:", recall_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
-    print("Macro F1:", f1_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0))
-    print("Balanced Accuracy:", balanced_accuracy_score(y_valid_encoded, y_valid_pred_encoded))
+    # ---- Metrics ----
+    acc = accuracy_score(y_valid_encoded, y_valid_pred_encoded)
 
+    # Binary metrics for the positive class (=1)
+    prec_pos = precision_score(y_valid_encoded, y_valid_pred_encoded, average='binary', pos_label=1, zero_division=0)
+    rec_pos = recall_score(y_valid_encoded, y_valid_pred_encoded, average='binary', pos_label=1, zero_division=0)
+    f1_pos = f1_score(y_valid_encoded, y_valid_pred_encoded, average='binary', pos_label=1, zero_division=0)
+
+    # Macro-averaged metrics (average over class 0 and class 1)
+    prec_macro = precision_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0)
+    rec_macro = recall_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0)
+    f1_macro = f1_score(y_valid_encoded, y_valid_pred_encoded, average='macro', zero_division=0)
+
+    bal_acc = balanced_accuracy_score(y_valid_encoded, y_valid_pred_encoded)
+
+    print("Accuracy:", acc)
+    print("Precision (pos=1):", prec_pos)
+    print("Recall (pos=1):", rec_pos)
+    print("F1 (pos=1):", f1_pos)
+    print("Precision (macro):", prec_macro)
+    print("Recall (macro):", rec_macro)
+    print("Macro F1:", f1_macro)
+    print("Balanced Accuracy:", bal_acc)
+
+    # ==========================
+    # SHAP (right=SUCCESS(0), left=FAILURE(1))
+    # Note: you said you flipped labels so that failure=1 and success=0.
+    # We therefore visualize SHAP in the SUCCESS direction.
+    # ==========================
     final_model, feature_names = models[-1]
     final_vectorizer = vectorizers[-1]
     X_valid_text_final = final_vectorizer.transform(valid_sentence)
@@ -186,24 +255,109 @@ def train_and_evaluate_model(train_df, valid_df, n_splits=5, threshold_objective
     explainer = shap.TreeExplainer(final_model.booster_, feature_perturbation='interventional')
     shap_values = explainer.shap_values(X_valid_full_final, check_additivity=False)
 
+    # shap_values can be either:
+    # - a list of arrays (class-wise SHAP), e.g. [class0, class1]
+    # - a single 2D array for the model output (usually the positive class (=1) margin)
     if isinstance(shap_values, list):
         shap_array = np.stack(shap_values, axis=0)
     else:
         shap_array = shap_values
 
-    print(f"SHAP values array shape: {shap_array.shape}")
+    print(f"SHAP values array shape: {getattr(shap_array, 'shape', None)}")
 
+    # Ensure shape = (num_outputs, n_samples, n_features)
     if shap_array.ndim == 2:
         shap_array = shap_array[np.newaxis, ...]
 
-    num_classes = shap_array.shape[0]
-    if num_classes == 1:
-        shap.summary_plot(shap_array[0], X_valid_full_final, feature_names=feature_names)
-    elif num_classes == 2:
-        shap.summary_plot(shap_array[1], X_valid_full_final, feature_names=feature_names)
+    num_outputs = shap_array.shape[0]
+
+    # We want: right = SUCCESS(0), left = FAILURE(1)
+    # - If we have class-wise outputs (2 outputs), use class 0 directly.
+    # - If we only have one output (typically for class 1 in binary), flip the sign to convert
+    #   "push towards failure(1)" into "push towards success(0)".
+    if num_outputs >= 2:
+        shap_success = shap_array[0]
+        print("[SHAP] Plotting class 0 (SUCCESS) contributions: right increases P(success=0).")
     else:
-        for i in range(num_classes):
-            print(f"Class: {i}")
-            shap.summary_plot(shap_array[i], X_valid_full_final, feature_names=feature_names)
+        shap_success = -shap_array[0]
+        print("[SHAP] Single-output SHAP assumed for class 1 (FAILURE); sign-flipped to show SUCCESS direction.")
+
+    shap.summary_plot(
+        shap_success,
+        X_valid_full_final,
+        feature_names=feature_names,
+        show=False,
+        max_display=20
+    )
+    plt.title("SHAP summary (SUCCESS=0 to the right, FAILURE=1 to the left)")
+    plt.tight_layout()
+    
+    # Optionally produce SHAP dependence plots for selected features.
+    if create_shap_dependence:
+        os.makedirs(shap_plot_dir, exist_ok=True)
+
+        # shap_success: (n_samples, n_features)
+        mean_abs_shap = np.mean(np.abs(shap_success), axis=0)
+        top_idx = np.argsort(-mean_abs_shap)
+
+        # Build list of indices to plot
+        if dependence_features is None:
+            selected_idx = top_idx[:max_dependence]
+        else:
+            selected_idx = []
+            for f in dependence_features:
+                if isinstance(f, int):
+                    if 0 <= f < len(feature_names):
+                        selected_idx.append(f)
+                    else:
+                        print(f"dependence feature index out of range: {f}")
+                elif isinstance(f, str):
+                    if f in feature_names:
+                        selected_idx.append(feature_names.index(f))
+                    else:
+                        # try with tfidf:: prefix if absent
+                        alt = f if f.startswith("tfidf::") else f"tfidf::{f}"
+                        if alt in feature_names:
+                            selected_idx.append(feature_names.index(alt))
+                        else:
+                            print(f"dependence feature name not found: {f}")
+                else:
+                    print(f"unsupported dependence feature type: {f}")
+
+        # Remove duplicates while preserving order
+        seen = set()
+        selected_idx = [x for x in selected_idx if not (x in seen or seen.add(x))]
+
+        # Log-transform selected numeric features for dependence plots only.
+        log_targets = {"project_cost_plan", "project_duration_plan", "population"}
+        X_valid_for_dependence = X_valid_full_final.copy()
+        feature_names_for_plot = list(feature_names)
+        for fname in log_targets:
+            if fname in feature_names:
+                fidx = feature_names.index(fname)
+                col = np.asarray(X_valid_for_dependence[:, fidx], dtype=float)
+                col = np.where(col >= 0, np.log1p(col), np.nan)
+                X_valid_for_dependence[:, fidx] = col
+                feature_names_for_plot[fidx] = f"log1p::{fname}"
+
+        for idx in selected_idx:
+            fname = feature_names_for_plot[idx]
+            try:
+                shap.dependence_plot(
+                    idx,
+                    shap_success,
+                    X_valid_for_dependence,
+                    feature_names=feature_names_for_plot,
+                    show=False,
+                )
+                fig = plt.gcf()
+                safe_name = fname.replace('/', '_').replace(' ', '_')
+                out_path = os.path.join(shap_plot_dir, f"shap_dependence_{idx}_{safe_name}.png")
+                if save_shap_plots:
+                    fig.savefig(out_path, bbox_inches='tight')
+                    print(f"Saved SHAP dependence plot: {out_path}")
+                plt.close(fig)
+            except Exception as e:
+                print(f"Failed to create dependence plot for {fname} (idx={idx}): {e}")
 
     plt.show()
