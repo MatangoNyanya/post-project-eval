@@ -689,9 +689,11 @@ with st.sidebar:
 
     sector_options = sorted(df_master["分野"].dropna().unique().tolist())
     region_options = sorted(df_master["region_detail"].dropna().unique().tolist())
+    scheme_options = sorted(df_master["type"].dropna().unique().tolist())
 
     selected_sectors = form.multiselect("分野", sector_options)
     selected_regions = form.multiselect("地域 (region_detail)", region_options)
+    selected_schemes = form.multiselect("スキーム", scheme_options)
 
     submitted = form.form_submit_button("▶ クラスタリングを実行", use_container_width=True)
 
@@ -707,6 +709,7 @@ if submitted:
                 sectors=selected_sectors,
                 regions=selected_regions,
                 eval_year_range=selected_eval_years,
+                schemes=selected_schemes,
             )
         except ValueError as exc:
             st.error(str(exc))
